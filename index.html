@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a2740">
+<title>עברית · Vokabeltrainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f2ec; --card:#ffffff; --ink:#20242c; --muted:#7a7f8a;
+  --accent:#1a5fb4; --accent-ink:#ffffff; --line:#e4dfd5;
+  --good:#2a7d4f; --bad:#b3423a; --warn:#a8730a; --chip:#eee9df;
+  --he-font:"Noto Sans Hebrew","Arial Hebrew","Segoe UI Historic",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#151a23; --card:#1f2632; --ink:#e8e6e1; --muted:#8b93a1;
+    --accent:#6ca0e8; --accent-ink:#10141c; --line:#2c3545;
+    --good:#5abb87; --bad:#e08079; --warn:#d9a441; --chip:#2a3140; }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  min-height:100dvh; display:flex; flex-direction:column;}
+.wrap{max-width:520px; width:100%; margin:0 auto; padding:14px 16px calc(24px + env(safe-area-inset-bottom)); flex:1; display:flex; flex-direction:column;}
+header{display:flex; align-items:center; justify-content:space-between; padding:4px 0 10px;}
+header h1{font-size:1.05rem; margin:0; font-weight:600; letter-spacing:.02em;}
+header h1 .he{font-family:var(--he-font); font-size:1.25rem;}
+.iconbtn{background:none;border:none;color:var(--muted);font-size:1.35rem;padding:6px 8px;cursor:pointer;border-radius:8px}
+.iconbtn:active{background:var(--chip)}
+.statbar{display:flex; gap:8px; margin-bottom:14px;}
+.stat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 10px; text-align:center;}
+.stat b{display:block; font-size:1.25rem;}
+.stat span{font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+.card{background:var(--card); border:1px solid var(--line); border-radius:18px;
+  padding:26px 20px; box-shadow:0 2px 10px rgba(0,0,0,.05);
+  display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center;}
+.tag{font-size:.72rem; color:var(--muted); background:var(--chip); border-radius:99px; padding:3px 11px; letter-spacing:.04em;}
+.he-big{font-family:var(--he-font); font-size:2.7rem; line-height:1.5; direction:rtl; unicode-bidi:isolate;}
+.de-big{font-size:1.5rem; line-height:1.4; font-weight:600;}
+.he-ex{font-family:var(--he-font); font-size:1.55rem; line-height:1.9; direction:rtl; unicode-bidi:isolate;}
+.de-ex{font-size:1rem; color:var(--muted); line-height:1.45;}
+.forminfo{font-size:.8rem; color:var(--warn); font-weight:600;}
+.meta{font-size:.85rem; color:var(--muted);}
+.btnrow{display:flex; gap:10px; width:100%; margin-top:14px;}
+.btn{flex:1; border:none; border-radius:13px; padding:15px 8px; font-size:1rem; font-weight:600; cursor:pointer;
+  background:var(--accent); color:var(--accent-ink);}
+.btn.sec{background:var(--chip); color:var(--ink);}
+.btn.good{background:var(--good); color:#fff;}
+.btn.bad{background:var(--bad); color:#fff;}
+.btn.warn{background:var(--warn); color:#fff;}
+.btn:active{filter:brightness(.9)}
+.btn:disabled{opacity:.45}
+.grade small{display:block; font-weight:400; font-size:.68rem; opacity:.85; margin-top:2px;}
+.choices{display:flex; flex-direction:column; gap:10px; width:100%; margin-top:8px;}
+.choice{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:13px;
+  padding:14px 12px; font-size:1.15rem; cursor:pointer; line-height:1.5;}
+.choice.he{font-family:var(--he-font); font-size:1.5rem; direction:rtl;}
+.choice.correct{border-color:var(--good); background:color-mix(in srgb, var(--good) 14%, var(--card));}
+.choice.wrong{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--card));}
+input.answer{width:100%; border:1.5px solid var(--line); background:var(--bg); color:var(--ink);
+  border-radius:13px; padding:14px; font-size:1.2rem; text-align:center; margin-top:6px;}
+input.answer.he{font-family:var(--he-font); font-size:1.5rem; direction:rtl;}
+input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
+.feedback{font-size:1rem; font-weight:600; min-height:1.4em;}
+.feedback.ok{color:var(--good)} .feedback.no{color:var(--bad)}
+.progress{height:5px; background:var(--chip); border-radius:99px; margin:0 0 14px; overflow:hidden;}
+.progress i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .3s;}
+.done{display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; padding:38px 12px;}
+.done .big{font-size:3.2rem;}
+.hidden{display:none !important}
+.modal{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:50;}
+.sheet{background:var(--card); width:100%; max-width:520px; border-radius:20px 20px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); max-height:86dvh; overflow-y:auto;}
+.sheet h2{margin:0 0 14px; font-size:1.1rem;}
+.setting{display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); gap:10px;}
+.setting label{font-size:.95rem;}
+.setting select{font-size:1rem; padding:6px 10px; border-radius:9px; border:1px solid var(--line); background:var(--bg); color:var(--ink);}
+.setting input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+.smallnote{font-size:.78rem; color:var(--muted); margin-top:12px; line-height:1.5;}
+.listrow{padding:10px 0; border-bottom:1px solid var(--line);}
+.listrow .he{font-family:var(--he-font); font-size:1.3rem; direction:rtl; display:block;}
+.listrow .de{font-size:.9rem; color:var(--muted);}
+.searchbox{width:100%; padding:11px; border-radius:11px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font-size:1rem; margin-bottom:10px;}
+.memwarn{background:color-mix(in srgb, var(--warn) 18%, var(--card)); border:1px solid var(--warn);
+  border-radius:12px; padding:10px 12px; font-size:.82rem; margin-bottom:12px; line-height:1.45;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="iconbtn" id="btnList" title="Wortliste">≡</button>
+    <h1><span class="he">עִבְרִית</span> · Vokabeltrainer</h1>
+    <button class="iconbtn" id="btnSettings" title="Einstellungen">⚙</button>
+  </header>
+  <div id="memWarn" class="memwarn hidden">⚠️ Der Speicher deines Browsers ist nicht verfügbar – der Fortschritt geht beim Schließen verloren. Öffne die Datei direkt im Browser (Safari/Chrome) statt in einer Vorschau, oder nutze Export/Import in den Einstellungen.</div>
+  <div class="statbar">
+    <div class="stat"><b id="stDue">0</b><span>Fällig</span></div>
+    <div class="stat"><b id="stNew">0</b><span>Neu heute</span></div>
+    <div class="stat"><b id="stLearned">0</b><span>Gelernt</span></div>
+    <div class="stat"><b id="stStreak">0</b><span>Serie 🔥</span></div>
+  </div>
+  <div class="progress"><i id="progBar" style="width:0%"></i></div>
+  <div id="stage"></div>
+</div>
+
+<div id="modalSettings" class="modal hidden"><div class="sheet">
+  <h2>Einstellungen</h2>
+  <div class="setting"><label>Neue Wörter pro Tag</label>
+    <select id="setNew"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+  <div class="setting"><label>Karteikarte (Selbsteinschätzung)</label><input type="checkbox" id="mFlash" checked></div>
+  <div class="setting"><label>Multiple Choice</label><input type="checkbox" id="mMc" checked></div>
+  <div class="setting"><label>Schreiben (Eingabe)</label><input type="checkbox" id="mType" checked></div>
+  <div class="btnrow"><button class="btn sec" id="btnExport">Fortschritt exportieren</button>
+    <button class="btn sec" id="btnImportClick">Importieren</button></div>
+  <input type="file" id="fileImport" accept=".json" class="hidden">
+  <div class="btnrow"><button class="btn bad" id="btnReset">Fortschritt zurücksetzen</button></div>
+  <p class="smallnote">Spaced Repetition nach SM-2: Wörter, die du gut kennst, kommen in wachsenden Abständen wieder (1 Tag → 6 Tage → Wochen → Monate). Fehler setzen das Intervall zurück. Für die Schreibübung Deutsch→Hebräisch brauchst du die hebräische Tastatur auf deinem Handy (Einstellungen → Tastatur). Nikud musst du nicht mitschreiben.</p>
+  <div class="btnrow"><button class="btn" id="btnCloseSettings">Schließen</button></div>
+</div></div>
+
+<div id="modalList" class="modal hidden"><div class="sheet">
+  <h2>Wortliste (<span id="listCount"></span>)</h2>
+  <input class="searchbox" id="listSearch" placeholder="Suchen (Deutsch oder Hebräisch)…">
+  <div id="listBody"></div>
+  <div class="btnrow"><button class="btn" id="btnCloseList">Schließen</button></div>
+</div></div>
+
+<script>
+"use strict";
+const VOCAB = [{"he":"לְהַצְלִיחַ","de":"gelingen, Erfolg haben, es schaffen","pos":"Verb","binyan":"Hif'il","root":"צ־ל־ח","level":"B1","ex":[{"he":"הִצְלַחְתִּי לִמְצֹא אֶת הַמַּפְתְּחוֹת.","de":"Es ist mir gelungen, die Schlüssel zu finden.","form":"Vergangenheit, 1. Person Singular"},{"he":"אֲנַחְנוּ מַצְלִיחִים לְהַגִּיעַ בַּזְּמַן.","de":"Wir schaffen es, pünktlich anzukommen.","form":"Gegenwart, 1. Person Plural"},{"he":"הִיא תַּצְלִיחַ בַּבְּחִינָה.","de":"Sie wird die Prüfung bestehen (Erfolg haben).","form":"Zukunft, 3. Person Singular, weiblich"}],"id":1},{"he":"לְהִשְׁתַּתֵּף","de":"teilnehmen, sich beteiligen","pos":"Verb","binyan":"Hitpa'el","root":"שׁ־ת־ף","level":"B1","ex":[{"he":"הֵם הִשְׁתַּתְּפוּ בַּפְּגִישָׁה אֶתְמוֹל.","de":"Sie haben gestern an der Besprechung teilgenommen.","form":"Vergangenheit, 3. Person Plural"},{"he":"הִיא מִשְׁתַּתֶּפֶת בְּקוּרְס עִבְרִית.","de":"Sie nimmt an einem Hebräischkurs teil.","form":"Gegenwart, Singular, weiblich"},{"he":"אֲנִי אֶשְׁתַּתֵּף בַּתַּחֲרוּת בַּשָּׁנָה הַבָּאָה.","de":"Ich werde nächstes Jahr am Wettbewerb teilnehmen.","form":"Zukunft, 1. Person Singular"}],"id":2},{"he":"לְהִתְרַגֵּל","de":"sich gewöhnen (an)","pos":"Verb","binyan":"Hitpa'el","root":"ר־ג־ל","level":"B1","ex":[{"he":"הִתְרַגַּלְתָּ כְּבָר לַמֶּזֶג הָאֲוִיר?","de":"Hast du dich schon an das Wetter gewöhnt?","form":"Vergangenheit, 2. Person Singular, männlich"},{"he":"אֲנִי מִתְרַגֵּל לַעֲבוֹדָה הַחֲדָשָׁה.","de":"Ich gewöhne mich an die neue Arbeit.","form":"Gegenwart, Singular, männlich"},{"he":"הַיְּלָדִים יִתְרַגְּלוּ לַבַּיִת הֶחָדָשׁ.","de":"Die Kinder werden sich an das neue Haus gewöhnen.","form":"Zukunft, 3. Person Plural"}],"id":3},{"he":"לְהַמְלִיץ","de":"empfehlen","pos":"Verb","binyan":"Hif'il","root":"מ־ל־ץ","level":"B1","ex":[{"he":"הִיא הִמְלִיצָה עַל הַמִּסְעָדָה הַזֹּאת.","de":"Sie hat dieses Restaurant empfohlen.","form":"Vergangenheit, 3. Person Singular, weiblich"},{"he":"אֲנִי מַמְלִיץ לְךָ לִקְרֹא אֶת הַסֵּפֶר.","de":"Ich empfehle dir, das Buch zu lesen.","form":"Gegenwart, Singular, männlich"},{"he":"נַמְלִיץ עָלֶיךָ לַמִּשְׂרָה הַזֹּאת.","de":"Wir werden dich für diese Stelle empfehlen.","form":"Zukunft, 1. Person Plural"}],"id":4},{"he":"לְהַשְׁפִּיעַ","de":"beeinflussen, wirken (auf)","pos":"Verb","binyan":"Hif'il","root":"שׁ־פ־ע","level":"B2","ex":[{"he":"הַמַּשְׁבֵּר הִשְׁפִּיעַ עַל כֻּלָּנוּ.","de":"Die Krise hat uns alle beeinflusst.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"הַסְּבִיבָה מַשְׁפִּיעָה עַל הַהִתְנַהֲגוּת שֶׁלָּנוּ.","de":"Die Umgebung beeinflusst unser Verhalten.","form":"Gegenwart, Singular, weiblich"},{"he":"אַתָּה תַּשְׁפִּיעַ עַל הַהַחְלָטָה.","de":"Du wirst die Entscheidung beeinflussen.","form":"Zukunft, 2. Person Singular, männlich"}],"id":5},{"he":"לְהִתְמוֹדֵד","de":"bewältigen, zurechtkommen (mit), sich stellen","pos":"Verb","binyan":"Hitpa'el","root":"מ־ד־ד","level":"B2","ex":[{"he":"הִתְמוֹדַדְנוּ עִם בְּעָיוֹת רַבּוֹת.","de":"Wir haben viele Probleme bewältigt.","form":"Vergangenheit, 1. Person Plural"},{"he":"הֵם מִתְמוֹדְדִים עִם הַמַּצָּב בְּצוּרָה טוֹבָה.","de":"Sie kommen mit der Lage gut zurecht.","form":"Gegenwart, Plural, männlich"},{"he":"הִיא תִּתְמוֹדֵד עִם הָאֶתְגָּר הֶחָדָשׁ.","de":"Sie wird sich der neuen Herausforderung stellen.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":6},{"he":"לְהַעֲדִיף","de":"bevorzugen, lieber wollen","pos":"Verb","binyan":"Hif'il","root":"ע־ד־ף","level":"B1","ex":[{"he":"הֵם הֶעֱדִיפוּ לְהִשָּׁאֵר בַּבַּיִת.","de":"Sie zogen es vor, zu Hause zu bleiben.","form":"Vergangenheit, 3. Person Plural"},{"he":"אֲנִי מַעֲדִיף קָפֶה עַל תֵּה.","de":"Ich bevorzuge Kaffee gegenüber Tee.","form":"Gegenwart, Singular, männlich"},{"he":"תַּעֲדִיפוּ לִנְסֹעַ בָּרַכֶּבֶת אוֹ בָּאוֹטוֹבּוּס?","de":"Werdet ihr es vorziehen, mit dem Zug oder mit dem Bus zu fahren?","form":"Zukunft, 2. Person Plural"}],"id":7},{"he":"לְהַשְׁווֹת","de":"vergleichen","pos":"Verb","binyan":"Hif'il","root":"שׁ־ו־ה","level":"B2","ex":[{"he":"הִשְׁוֵיתִי אֶת הַמְּחִירִים בִּשְׁתֵּי הַחֲנֻיּוֹת.","de":"Ich habe die Preise in den beiden Läden verglichen.","form":"Vergangenheit, 1. Person Singular"},{"he":"הוּא מַשְׁוֶה אֶת הַהַצָּעוֹת לִפְנֵי הַהַחְלָטָה.","de":"Er vergleicht die Angebote vor der Entscheidung.","form":"Gegenwart, Singular, männlich"},{"he":"הַחוֹקְרִים יַשְׁווּ אֶת הַתּוֹצָאוֹת.","de":"Die Forscher werden die Ergebnisse vergleichen.","form":"Zukunft, 3. Person Plural"}],"id":8},{"he":"לְהִתְפַּתֵּחַ","de":"sich entwickeln","pos":"Verb","binyan":"Hitpa'el","root":"פ־ת־ח","level":"B2","ex":[{"he":"הָעִיר הִתְפַּתְּחָה מַהֵר בַּשָּׁנִים הָאַחֲרוֹנוֹת.","de":"Die Stadt hat sich in den letzten Jahren schnell entwickelt.","form":"Vergangenheit, 3. Person Singular, weiblich"},{"he":"הַטֶּכְנוֹלוֹגְיָה מִתְפַּתַּחַת כָּל הַזְּמַן.","de":"Die Technologie entwickelt sich ständig.","form":"Gegenwart, Singular, weiblich"},{"he":"הַפְּרוֹיֶקְט יִתְפַּתֵּחַ בְּהַדְרָגָה.","de":"Das Projekt wird sich allmählich entwickeln.","form":"Zukunft, 3. Person Singular, männlich"}],"id":9},{"he":"לְהוֹכִיחַ","de":"beweisen, nachweisen","pos":"Verb","binyan":"Hif'il","root":"י־כ־ח","level":"B2","ex":[{"he":"הוּא הוֹכִיחַ שֶׁהוּא צָדַק.","de":"Er hat bewiesen, dass er recht hatte.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"הִיא מוֹכִיחָה אֶת הַיְּכֹלֶת שֶׁלָּהּ כָּל יוֹם.","de":"Sie beweist ihre Fähigkeit jeden Tag.","form":"Gegenwart, Singular, weiblich"},{"he":"אֲנִי אוֹכִיחַ לָכֶם שֶׁזֶּה אֶפְשָׁרִי.","de":"Ich werde euch beweisen, dass es möglich ist.","form":"Zukunft, 1. Person Singular"}],"id":10},{"he":"לְהַסְכִּים","de":"zustimmen, einverstanden sein","pos":"Verb","binyan":"Hif'il","root":"ס־כ־ם","level":"B1","ex":[{"he":"הִסְכַּמְתִּי לַהַצָּעָה שֶׁלּוֹ.","de":"Ich habe seinem Vorschlag zugestimmt.","form":"Vergangenheit, 1. Person Singular"},{"he":"אֲנַחְנוּ מַסְכִּימִים אִתְּךָ לְגַמְרֵי.","de":"Wir stimmen dir völlig zu.","form":"Gegenwart, 1. Person Plural"},{"he":"הִיא לֹא תַּסְכִּים לַתְּנָאִים הָאֵלֶּה.","de":"Sie wird diesen Bedingungen nicht zustimmen.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":11},{"he":"לְהִתְנַגֵּד","de":"dagegen sein, sich widersetzen, Einwände haben","pos":"Verb","binyan":"Hitpa'el","root":"נ־ג־ד","level":"B2","ex":[{"he":"רַבִּים הִתְנַגְּדוּ לַתָּכְנִית הַחֲדָשָׁה.","de":"Viele waren gegen den neuen Plan.","form":"Vergangenheit, 3. Person Plural"},{"he":"הוּא מִתְנַגֵּד לְכָל שִׁנּוּי.","de":"Er widersetzt sich jeder Veränderung.","form":"Gegenwart, Singular, männlich"},{"he":"לֹא נִתְנַגֵּד לָרַעְיוֹן שֶׁלָּכֶם.","de":"Wir werden uns eurer Idee nicht widersetzen.","form":"Zukunft, 1. Person Plural"}],"id":12},{"he":"לְהִתְלַבֵּט","de":"unschlüssig sein, hin- und hergerissen sein, abwägen","pos":"Verb","binyan":"Hitpa'el","root":"ל־ב־ט","level":"B2","ex":[{"he":"הִתְלַבַּטְתִּי בֵּין שְׁתֵּי הָאֶפְשָׁרֻיּוֹת.","de":"Ich schwankte zwischen den beiden Möglichkeiten.","form":"Vergangenheit, 1. Person Singular"},{"he":"הִיא מִתְלַבֶּטֶת אִם לְקַבֵּל אֶת הַהַצָּעָה.","de":"Sie ist unschlüssig, ob sie das Angebot annehmen soll.","form":"Gegenwart, Singular, weiblich"},{"he":"אַתָּה עוֹד תִּתְלַבֵּט הַרְבֵּה זְמַן?","de":"Wirst du noch lange unschlüssig sein?","form":"Zukunft, 2. Person Singular, männlich"}],"id":13},{"he":"לְוַתֵּר","de":"verzichten (auf), nachgeben, aufgeben","pos":"Verb","binyan":"Pi'el","root":"ו־ת־ר","level":"B1","ex":[{"he":"הוּא וִתֵּר עַל הַחֻפְשָׁה בִּגְלַל הָעֲבוֹדָה.","de":"Er hat wegen der Arbeit auf den Urlaub verzichtet.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"אֲנִי לֹא מְוַתֵּר בְּקַלּוּת.","de":"Ich gebe nicht leicht auf.","form":"Gegenwart, Singular, männlich"},{"he":"הֵם לֹא יְוַתְּרוּ עַל הַזְּכֻיּוֹת שֶׁלָּהֶם.","de":"Sie werden nicht auf ihre Rechte verzichten.","form":"Zukunft, 3. Person Plural"}],"id":14},{"he":"לְהַשְׁקִיעַ","de":"investieren, sich Mühe geben","pos":"Verb","binyan":"Hif'il","root":"שׁ־ק־ע","level":"B2","ex":[{"he":"הִיא הִשְׁקִיעָה הַרְבֵּה זְמַן בַּפְּרוֹיֶקְט.","de":"Sie hat viel Zeit in das Projekt investiert.","form":"Vergangenheit, 3. Person Singular, weiblich"},{"he":"אֲנַחְנוּ מַשְׁקִיעִים בַּחִנּוּךְ שֶׁל הַיְּלָדִים.","de":"Wir investieren in die Bildung der Kinder.","form":"Gegenwart, 1. Person Plural"},{"he":"אַשְׁקִיעַ יוֹתֵר בַּלִּמּוּדִים בַּסֵּמֶסְטֶר הַבָּא.","de":"Ich werde mich im nächsten Semester mehr ins Studium einbringen.","form":"Zukunft, 1. Person Singular"}],"id":15},{"he":"לְהַרְוִיחַ","de":"verdienen, gewinnen, profitieren","pos":"Verb","binyan":"Hif'il","root":"ר־ו־ח","level":"B1","ex":[{"he":"הִרְוַחְנוּ הַרְבֵּה כֶּסֶף מֵהָעִסְקָה.","de":"Wir haben mit dem Geschäft viel Geld verdient.","form":"Vergangenheit, 1. Person Plural"},{"he":"הוּא מַרְוִיחַ מַשְׂכֹּרֶת טוֹבָה.","de":"Er verdient ein gutes Gehalt.","form":"Gegenwart, Singular, männlich"},{"he":"הִיא תַּרְוִיחַ מֵהַנִּסָּיוֹן הַזֶּה.","de":"Sie wird von dieser Erfahrung profitieren.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":16},{"he":"לְהַפְסִיד","de":"verlieren (Geld, Spiel), verpassen","pos":"Verb","binyan":"Hif'il","root":"פ־ס־ד","level":"B1","ex":[{"he":"הֵם הִפְסִידוּ בַּמִּשְׂחָק אֶתְמוֹל.","de":"Sie haben gestern das Spiel verloren.","form":"Vergangenheit, 3. Person Plural"},{"he":"הַחֶבְרָה מַפְסִידָה כֶּסֶף כָּל חֹדֶשׁ.","de":"Die Firma verliert jeden Monat Geld.","form":"Gegenwart, Singular, weiblich"},{"he":"אִם לֹא נְמַהֵר, נַפְסִיד אֶת הָרַכֶּבֶת.","de":"Wenn wir uns nicht beeilen, werden wir den Zug verpassen.","form":"Zukunft, 1. Person Plural"}],"id":17},{"he":"לְשַׁכְנֵעַ","de":"überzeugen, überreden","pos":"Verb","binyan":"Pi'el","root":"שׁ־כ־נ־ע","level":"B2","ex":[{"he":"שִׁכְנַעְתָּ אוֹתִי, אֲנִי בָּא.","de":"Du hast mich überzeugt, ich komme mit.","form":"Vergangenheit, 2. Person Singular, männlich"},{"he":"הוּא מְשַׁכְנֵעַ אֶת הַלָּקוֹחוֹת לִקְנוֹת.","de":"Er überredet die Kunden zum Kaufen.","form":"Gegenwart, Singular, männlich"},{"he":"הִיא תְּשַׁכְנֵעַ אֶת הַמְּנַהֵל לְאַשֵּׁר אֶת הַתָּכְנִית.","de":"Sie wird den Chef überzeugen, den Plan zu genehmigen.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":18},{"he":"לְהִתְאַכְזֵב","de":"enttäuscht werden/sein","pos":"Verb","binyan":"Hitpa'el","root":"א־כ־ז־ב","level":"B2","ex":[{"he":"הִתְאַכְזַבְתִּי מֵהַסֶּרֶט הֶחָדָשׁ.","de":"Ich war von dem neuen Film enttäuscht.","form":"Vergangenheit, 1. Person Singular"},{"he":"הֵם מִתְאַכְזְבִים מֵהַתּוֹצָאוֹת.","de":"Sie sind von den Ergebnissen enttäuscht.","form":"Gegenwart, Plural, männlich"},{"he":"אַל תְּצַפֶּה לְיוֹתֵר מִדַּי, אַחֶרֶת תִּתְאַכְזֵב.","de":"Erwarte nicht zu viel, sonst wirst du enttäuscht sein.","form":"Zukunft, 2. Person Singular, männlich"}],"id":19},{"he":"לְהַפְתִּיעַ","de":"überraschen","pos":"Verb","binyan":"Hif'il","root":"פ־ת־ע","level":"B2","ex":[{"he":"הִיא הִפְתִּיעָה אֶת כֻּלָּם בַּהַחְלָטָה שֶׁלָּהּ.","de":"Sie hat alle mit ihrer Entscheidung überrascht.","form":"Vergangenheit, 3. Person Singular, weiblich"},{"he":"הוּא תָּמִיד מַפְתִּיעַ אוֹתָנוּ בְּרַעְיוֹנוֹת חֲדָשִׁים.","de":"Er überrascht uns immer mit neuen Ideen.","form":"Gegenwart, Singular, männlich"},{"he":"אַפְתִּיעַ אוֹתָהּ בְּמַתָּנָה לְיוֹם הַהֻלֶּדֶת.","de":"Ich werde sie mit einem Geschenk zum Geburtstag überraschen.","form":"Zukunft, 1. Person Singular"}],"id":20},{"he":"לִדְאֹג","de":"sich sorgen, sorgen (für), sich kümmern (um)","pos":"Verb","binyan":"Pa'al","root":"ד־א־ג","level":"B1","ex":[{"he":"הוּא דָּאַג לַיְּלָדִים כָּל הַשָּׁנִים.","de":"Er hat all die Jahre für die Kinder gesorgt.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"אִמָּא דּוֹאֶגֶת כְּשֶׁאֲנִי חוֹזֵר מְאֻחָר.","de":"Mama macht sich Sorgen, wenn ich spät nach Hause komme.","form":"Gegenwart, Singular, weiblich"},{"he":"נִדְאַג לְכָל הַפְּרָטִים שֶׁל הָאֵרוּעַ.","de":"Wir werden uns um alle Einzelheiten der Veranstaltung kümmern.","form":"Zukunft, 1. Person Plural"}],"id":21},{"he":"לְהִמָּנַע","de":"vermeiden, sich enthalten","pos":"Verb","binyan":"Nif'al","root":"מ־נ־ע","level":"B2","ex":[{"he":"הֵם נִמְנְעוּ מִתְּשׁוּבָה בְּרוּרָה.","de":"Sie haben eine klare Antwort vermieden.","form":"Vergangenheit, 3. Person Plural"},{"he":"אֲנִי נִמְנָע מִסֻּכָּר בַּזְּמַן הָאַחֲרוֹן.","de":"Ich vermeide in letzter Zeit Zucker.","form":"Gegenwart, Singular, männlich"},{"he":"כְּדַאי שֶׁתִּמָּנַע מִוִּכּוּחִים מְיֻתָּרִים.","de":"Du solltest überflüssige Streitereien vermeiden.","form":"Zukunft, 2. Person Singular, männlich"}],"id":22},{"he":"לְצַפּוֹת","de":"erwarten; zuschauen","pos":"Verb","binyan":"Pi'el","root":"צ־פ־ה","level":"B2","ex":[{"he":"צִפִּיתִי לְתוֹצָאָה אַחֶרֶת.","de":"Ich habe ein anderes Ergebnis erwartet.","form":"Vergangenheit, 1. Person Singular"},{"he":"אֲנַחְנוּ מְצַפִּים לַחֲדָשׁוֹת טוֹבוֹת.","de":"Wir erwarten gute Neuigkeiten.","form":"Gegenwart, 1. Person Plural"},{"he":"הִיא תְּצַפֶּה מִמְּךָ לְיוֹתֵר אַחְרָיוּת.","de":"Sie wird von dir mehr Verantwortung erwarten.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":23},{"he":"לְהִתְקַדֵּם","de":"vorankommen, Fortschritte machen","pos":"Verb","binyan":"Hitpa'el","root":"ק־ד־ם","level":"B1","ex":[{"he":"הִתְקַדַּמְנוּ יָפֶה בַּפְּרוֹיֶקְט הַשָּׁבוּעַ.","de":"Wir sind diese Woche mit dem Projekt gut vorangekommen.","form":"Vergangenheit, 1. Person Plural"},{"he":"הִיא מִתְקַדֶּמֶת מַהֵר בַּלִּמּוּדִים.","de":"Sie macht im Studium schnelle Fortschritte.","form":"Gegenwart, Singular, weiblich"},{"he":"הַדְּבָרִים יִתְקַדְּמוּ לְאַט אֲבָל בָּטוּחַ.","de":"Die Dinge werden langsam, aber sicher vorankommen.","form":"Zukunft, 3. Person Plural"}],"id":24},{"he":"לִתְרֹם","de":"beitragen, spenden","pos":"Verb","binyan":"Pa'al","root":"ת־ר־ם","level":"B2","ex":[{"he":"הוּא תָּרַם הַרְבֵּה לַהַצְלָחָה שֶׁל הַצֶּוֶת.","de":"Er hat viel zum Erfolg des Teams beigetragen.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"אֲנָשִׁים רַבִּים תּוֹרְמִים כֶּסֶף לָאִרְגּוּן.","de":"Viele Menschen spenden Geld an die Organisation.","form":"Gegenwart, Plural, männlich"},{"he":"אֶתְרֹם אֶת חֶלְקִי לַמַּאֲמָץ הַמְּשֻׁתָּף.","de":"Ich werde meinen Teil zur gemeinsamen Anstrengung beitragen.","form":"Zukunft, 1. Person Singular"}],"id":25},{"he":"לֵהָנוֹת","de":"genießen, Spaß haben (an)","pos":"Verb","binyan":"Nif'al","root":"ה־נ־ה","level":"B1","ex":[{"he":"נֶהֱנֵינוּ מְאוֹד מֵהַטִּיּוּל בַּצָּפוֹן.","de":"Wir haben den Ausflug in den Norden sehr genossen.","form":"Vergangenheit, 1. Person Plural"},{"he":"הוּא נֶהֱנֶה מִכָּל רֶגַע בָּעֲבוֹדָה.","de":"Er genießt jeden Moment bei der Arbeit.","form":"Gegenwart, Singular, männlich"},{"he":"אֲנִי בָּטוּחַ שֶׁהֵם יֵהָנוּ מֵהַהוֹפָעָה.","de":"Ich bin sicher, dass sie das Konzert genießen werden.","form":"Zukunft, 3. Person Plural"}],"id":26},{"he":"לְהִתְלוֹנֵן","de":"sich beschweren, klagen","pos":"Verb","binyan":"Hitpa'el","root":"ל־ו־ן","level":"B2","ex":[{"he":"הִיא הִתְלוֹנְנָה עַל הָרַעַשׁ בַּבִּנְיָן.","de":"Sie hat sich über den Lärm im Gebäude beschwert.","form":"Vergangenheit, 3. Person Singular, weiblich"},{"he":"הַשְּׁכֵנִים מִתְלוֹנְנִים כָּל הַזְּמַן.","de":"Die Nachbarn beschweren sich die ganze Zeit.","form":"Gegenwart, Plural, männlich"},{"he":"אִם הַשֵּׁרוּת לֹא יִשְׁתַּפֵּר, תִּתְלוֹנֵן לַהַנְהָלָה.","de":"Wenn der Service nicht besser wird, wirst du dich bei der Geschäftsleitung beschweren.","form":"Zukunft, 2. Person Singular, männlich"}],"id":27},{"he":"לְשַׁתֵּף","de":"teilen (mit jdm.), einbeziehen; לְשַׁתֵּף פְּעֻלָּה – kooperieren","pos":"Verb","binyan":"Pi'el","root":"שׁ־ת־ף","level":"B2","ex":[{"he":"שִׁתַּפְתִּי אֶת הַצֶּוֶת בַּתָּכְנִיּוֹת שֶׁלִּי.","de":"Ich habe das Team in meine Pläne einbezogen.","form":"Vergangenheit, 1. Person Singular"},{"he":"הוּא מְשַׁתֵּף אוֹתָנוּ בְּכָל הַהַחְלָטוֹת.","de":"Er bezieht uns in alle Entscheidungen ein.","form":"Gegenwart, Singular, männlich"},{"he":"הֵם יְשַׁתְּפוּ פְּעֻלָּה עִם הַמִּשְׁטָרָה.","de":"Sie werden mit der Polizei kooperieren.","form":"Zukunft, 3. Person Plural"}],"id":28},{"he":"לִקְבֹּעַ","de":"festlegen, vereinbaren, bestimmen","pos":"Verb","binyan":"Pa'al","root":"ק־ב־ע","level":"B1","ex":[{"he":"קָבַעְנוּ פְּגִישָׁה לְיוֹם שְׁלִישִׁי.","de":"Wir haben ein Treffen für Dienstag vereinbart.","form":"Vergangenheit, 1. Person Plural"},{"he":"הַוַּעֲדָה קוֹבַעַת אֶת הַכְּלָלִים.","de":"Der Ausschuss legt die Regeln fest.","form":"Gegenwart, Singular, weiblich"},{"he":"מָתַי תִּקְבַּע אֶת הַתּוֹר לָרוֹפֵא?","de":"Wann wirst du den Arzttermin vereinbaren?","form":"Zukunft, 2. Person Singular, männlich"}],"id":29},{"he":"לְבַטֵּל","de":"absagen, stornieren, aufheben","pos":"Verb","binyan":"Pi'el","root":"ב־ט־ל","level":"B1","ex":[{"he":"הוּא בִּטֵּל אֶת הַפְּגִישָׁה בָּרֶגַע הָאַחֲרוֹן.","de":"Er hat das Treffen in letzter Minute abgesagt.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"אֲנִי מְבַטֵּל אֶת הַהַזְמָנָה שֶׁלִּי.","de":"Ich storniere meine Bestellung.","form":"Gegenwart, Singular, männlich"},{"he":"הִיא תְּבַטֵּל אֶת הַטִּיסָה בִּגְלַל הַשְּׁבִיתָה.","de":"Sie wird den Flug wegen des Streiks stornieren.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":30},{"he":"לִדְחוֹת","de":"verschieben, aufschieben; ablehnen","pos":"Verb","binyan":"Pa'al","root":"ד־ח־ה","level":"B2","ex":[{"he":"הֵם דָּחוּ אֶת הָאֵרוּעַ לְחֹדֶשׁ הַבָּא.","de":"Sie haben die Veranstaltung auf nächsten Monat verschoben.","form":"Vergangenheit, 3. Person Plural"},{"he":"הוּא תָּמִיד דּוֹחֶה הַכֹּל לָרֶגַע הָאַחֲרוֹן.","de":"Er schiebt immer alles bis zur letzten Minute auf.","form":"Gegenwart, Singular, männlich"},{"he":"אִם לֹא נִהְיֶה מוּכָנִים, נִדְחֶה אֶת הַהַשָּׁקָה.","de":"Wenn wir nicht bereit sind, werden wir den Start verschieben.","form":"Zukunft, 1. Person Plural"}],"id":31},{"he":"לְהִתְיַחֵס","de":"sich beziehen (auf), behandeln, eingehen (auf)","pos":"Verb","binyan":"Hitpa'el","root":"י־ח־ס","level":"B2","ex":[{"he":"הוּא לֹא הִתְיַחֵס לַשְּׁאֵלָה שֶׁלִּי.","de":"Er ist auf meine Frage nicht eingegangen.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"הִיא מִתְיַחֶסֶת לְכָל לָקוֹחַ בְּכָבוֹד.","de":"Sie behandelt jeden Kunden mit Respekt.","form":"Gegenwart, Singular, weiblich"},{"he":"תִּתְיַחֲסוּ בְּבַקָּשָׁה לַנְּקֻדּוֹת הַחֲשׁוּבוֹת.","de":"Geht bitte auf die wichtigen Punkte ein.","form":"Zukunft, 2. Person Plural"}],"id":32},{"he":"לְהַבְחִין","de":"bemerken, unterscheiden, erkennen","pos":"Verb","binyan":"Hif'il","root":"ב־ח־ן","level":"B2","ex":[{"he":"הִבְחַנְתִּי בְּשִׁנּוּי קָטָן בַּהִתְנַהֲגוּת שֶׁלּוֹ.","de":"Ich habe eine kleine Veränderung in seinem Verhalten bemerkt.","form":"Vergangenheit, 1. Person Singular"},{"he":"אֲנַחְנוּ מַבְחִינִים בֵּין עִקָּר לְטָפֵל.","de":"Wir unterscheiden zwischen Wesentlichem und Nebensächlichem.","form":"Gegenwart, 1. Person Plural"},{"he":"רַק מֻמְחֶה יַבְחִין בַּהֶבְדֵּל.","de":"Nur ein Experte wird den Unterschied erkennen.","form":"Zukunft, 3. Person Singular, männlich"}],"id":33},{"he":"לְהַשִּׂיג","de":"erreichen, erzielen, beschaffen","pos":"Verb","binyan":"Hif'il","root":"נ־שׂ־ג","level":"B2","ex":[{"he":"הִיא הִשִּׂיגָה אֶת כָּל הַמַּטָּרוֹת שֶׁלָּהּ.","de":"Sie hat alle ihre Ziele erreicht.","form":"Vergangenheit, 3. Person Singular, weiblich"},{"he":"הוּא מַשִּׂיג תּוֹצָאוֹת מְצֻיָּנוֹת.","de":"Er erzielt hervorragende Ergebnisse.","form":"Gegenwart, Singular, männlich"},{"he":"אַשִּׂיג לְךָ כַּרְטִיסִים לַהוֹפָעָה.","de":"Ich werde dir Karten für das Konzert besorgen.","form":"Zukunft, 1. Person Singular"}],"id":34},{"he":"לְהִתְחַיֵּב","de":"sich verpflichten, zusagen","pos":"Verb","binyan":"Hitpa'el","root":"ח־י־ב","level":"C1","ex":[{"he":"הִתְחַיַּבְנוּ לְסַיֵּם אֶת הָעֲבוֹדָה עַד סוֹף הַחֹדֶשׁ.","de":"Wir haben uns verpflichtet, die Arbeit bis Ende des Monats abzuschließen.","form":"Vergangenheit, 1. Person Plural"},{"he":"הוּא מִתְחַיֵּב לְאֵיכוּת גְּבוֹהָה.","de":"Er verpflichtet sich zu hoher Qualität.","form":"Gegenwart, Singular, männlich"},{"he":"הַחֶבְרָה תִּתְחַיֵּב לִזְמַן אַסְפָּקָה קָצָר.","de":"Die Firma wird sich zu einer kurzen Lieferzeit verpflichten.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":35},{"he":"לְהַצִּיעַ","de":"vorschlagen, anbieten","pos":"Verb","binyan":"Hif'il","root":"י־צ־ע","level":"B1","ex":[{"he":"הוּא הִצִּיעַ פִּתְרוֹן פָּשׁוּט לַבְּעָיָה.","de":"Er hat eine einfache Lösung für das Problem vorgeschlagen.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"הִיא מַצִּיעָה עֶזְרָה לְכָל מִי שֶׁצָּרִיךְ.","de":"Sie bietet jedem Hilfe an, der sie braucht.","form":"Gegenwart, Singular, weiblich"},{"he":"אַצִּיעַ אֶת הָרַעְיוֹן בַּיְּשִׁיבָה מָחָר.","de":"Ich werde die Idee morgen in der Sitzung vorschlagen.","form":"Zukunft, 1. Person Singular"}],"id":36},{"he":"לְהַחְלִיט","de":"entscheiden, beschließen","pos":"Verb","binyan":"Hif'il","root":"ח־ל־ט","level":"B1","ex":[{"he":"הֶחְלַטְתֶּם כְּבָר אֵיפֹה תָּגוּרוּ?","de":"Habt ihr schon entschieden, wo ihr wohnen werdet?","form":"Vergangenheit, 2. Person Plural"},{"he":"אֲנִי מַחְלִיט לְאַט אֲבָל בְּבִטְחוֹן.","de":"Ich entscheide langsam, aber mit Sicherheit.","form":"Gegenwart, Singular, männlich"},{"he":"הַוַּעֲדָה תַּחְלִיט בַּשָּׁבוּעַ הַבָּא.","de":"Der Ausschuss wird nächste Woche entscheiden.","form":"Zukunft, 3. Person Singular, weiblich"}],"id":37},{"he":"לְתַאֵר","de":"beschreiben, schildern","pos":"Verb","binyan":"Pi'el","root":"ת־א־ר","level":"B2","ex":[{"he":"הָעֵד תֵּאֵר אֶת מַה שֶּׁרָאָה.","de":"Der Zeuge beschrieb, was er gesehen hatte.","form":"Vergangenheit, 3. Person Singular, männlich"},{"he":"הִיא מְתָאֶרֶת אֶת הַחֲוָיָה בְּפֵרוּט.","de":"Sie schildert das Erlebnis ausführlich.","form":"Gegenwart, Singular, weiblich"},{"he":"אֲתָאֵר לָכֶם אֶת הַמַּצָּב בְּקִצּוּר.","de":"Ich werde euch die Lage kurz beschreiben.","form":"Zukunft, 1. Person Singular"}],"id":38},{"he":"הַחְלָטָה","de":"Entscheidung, Beschluss","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"זֹאת הָיְתָה הַהַחְלָטָה הַנְּכוֹנָה.","de":"Das war die richtige Entscheidung.","form":""}],"id":39},{"he":"הִזְדַּמְּנוּת","de":"Gelegenheit, Chance","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"אַל תְּפַסְפֵּס אֶת הַהִזְדַּמְּנוּת הַזֹּאת.","de":"Verpasse diese Gelegenheit nicht.","form":""}],"id":40},{"he":"נִסָּיוֹן","de":"Erfahrung; Versuch","pos":"Nomen","gender":"m","level":"B1","ex":[{"he":"יֵשׁ לָהּ הַרְבֵּה נִסָּיוֹן בַּתְּחוּם.","de":"Sie hat viel Erfahrung auf dem Gebiet.","form":""}],"id":41},{"he":"דֵּעָה","de":"Meinung, Ansicht","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"לְכָל אֶחָד יֵשׁ דֵּעָה אַחֶרֶת בַּנּוֹשֵׂא.","de":"Jeder hat eine andere Meinung zu dem Thema.","form":""}],"id":42},{"he":"מַשְׂכֹּרֶת","de":"Gehalt, Lohn","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"הַמַּשְׂכֹּרֶת נִכְנֶסֶת לַחֶשְׁבּוֹן בְּסוֹף הַחֹדֶשׁ.","de":"Das Gehalt geht am Monatsende auf dem Konto ein.","form":""}],"id":43},{"he":"סְבִיבָה","de":"Umgebung, Umfeld, Umwelt","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"חָשׁוּב לִשְׁמֹר עַל אֵיכוּת הַסְּבִיבָה.","de":"Es ist wichtig, die Umwelt zu schützen.","form":""}],"id":44},{"he":"חֶבְרָה","de":"Firma, Unternehmen; Gesellschaft","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"הוּא עוֹבֵד בְּחֶבְרַת הַיְי־טֶק גְּדוֹלָה.","de":"Er arbeitet in einer großen Hightech-Firma.","form":""}],"id":45},{"he":"מֶמְשָׁלָה","de":"Regierung","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"הַמֶּמְשָׁלָה הוֹדִיעָה עַל תָּכְנִית חֲדָשָׁה.","de":"Die Regierung hat einen neuen Plan angekündigt.","form":""}],"id":46},{"he":"בְּחִירוֹת","de":"Wahlen","pos":"Nomen","gender":"f (Plural)","level":"B2","ex":[{"he":"הַבְּחִירוֹת יִתְקַיְּמוּ בְּעוֹד חֳדָשַׁיִם.","de":"Die Wahlen finden in zwei Monaten statt.","form":""}],"id":47},{"he":"מַשְׁבֵּר","de":"Krise","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הַמְּדִינָה עוֹבֶרֶת מַשְׁבֵּר כַּלְכָּלִי.","de":"Das Land macht eine Wirtschaftskrise durch.","form":""}],"id":48},{"he":"פִּתְרוֹן","de":"Lösung","pos":"Nomen","gender":"m","level":"B1","ex":[{"he":"מָצָאנוּ פִּתְרוֹן יְצִירָתִי לַבְּעָיָה.","de":"Wir haben eine kreative Lösung für das Problem gefunden.","form":""}],"id":49},{"he":"אֶתְגָּר","de":"Herausforderung","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הַתַּפְקִיד הֶחָדָשׁ הוּא אֶתְגָּר אֲמִתִּי בִּשְׁבִילִי.","de":"Die neue Aufgabe ist eine echte Herausforderung für mich.","form":""}],"id":50},{"he":"מַטָּרָה","de":"Ziel, Zweck","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"הַמַּטָּרָה שֶׁלִּי הִיא לְדַבֵּר עִבְרִית שׁוֹטֶפֶת.","de":"Mein Ziel ist es, fließend Hebräisch zu sprechen.","form":""}],"id":51},{"he":"תּוֹצָאָה","de":"Ergebnis, Resultat, Folge","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"הַתּוֹצָאוֹת שֶׁל הַבְּדִיקָה הָיוּ טוֹבוֹת.","de":"Die Ergebnisse der Untersuchung waren gut.","form":""}],"id":52},{"he":"הַשְׁפָּעָה","de":"Einfluss, Wirkung","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"לַמּוּזִיקָה יֵשׁ הַשְׁפָּעָה חִיּוּבִית עַל מַצַּב הָרוּחַ.","de":"Musik hat eine positive Wirkung auf die Stimmung.","form":""}],"id":53},{"he":"קֶשֶׁר","de":"Verbindung, Beziehung, Kontakt","pos":"Nomen","gender":"m","level":"B1","ex":[{"he":"אֲנַחְנוּ שׁוֹמְרִים עַל קֶשֶׁר כְּבָר שָׁנִים.","de":"Wir halten schon seit Jahren Kontakt.","form":""}],"id":54},{"he":"אַחְרָיוּת","de":"Verantwortung","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"הוּא לָקַח אַחְרָיוּת עַל הַטָּעוּת.","de":"Er hat die Verantwortung für den Fehler übernommen.","form":""}],"id":55},{"he":"בִּטָּחוֹן","de":"Sicherheit; Selbstvertrauen","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הִיא מְדַבֶּרֶת בְּבִטָּחוֹן מוּל קָהָל.","de":"Sie spricht mit Selbstvertrauen vor Publikum.","form":""}],"id":56},{"he":"הַצָּעָה","de":"Vorschlag, Angebot","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"קִבַּלְתִּי הַצָּעַת עֲבוֹדָה מְעַנְיֶנֶת.","de":"Ich habe ein interessantes Jobangebot bekommen.","form":""}],"id":57},{"he":"דְּרִישָׁה","de":"Forderung, Anforderung","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"הַדְּרִישׁוֹת בַּתַּפְקִיד הַזֶּה גְּבוֹהוֹת מְאוֹד.","de":"Die Anforderungen in dieser Position sind sehr hoch.","form":""}],"id":58},{"he":"תְּנַאי","de":"Bedingung, Voraussetzung","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"זֶה תְּנַאי הֶכְרֵחִי לַהַצְלָחָה.","de":"Das ist eine unerlässliche Voraussetzung für den Erfolg.","form":""}],"id":59},{"he":"חוֹזֶה","de":"Vertrag","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"חָתַמְנוּ עַל הַחוֹזֶה שֶׁל הַדִּירָה.","de":"Wir haben den Mietvertrag für die Wohnung unterschrieben.","form":""}],"id":60},{"he":"רֶוַח","de":"Gewinn, Profit","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הַחֶבְרָה הִצִּיגָה רֶוַח גָּדוֹל הַשָּׁנָה.","de":"Die Firma hat dieses Jahr einen großen Gewinn ausgewiesen.","form":""}],"id":61},{"he":"הֶפְסֵד","de":"Verlust","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הַהֶפְסֵד בַּמִּשְׂחָק הָיָה כּוֹאֵב.","de":"Die Niederlage im Spiel war schmerzhaft.","form":""}],"id":62},{"he":"מַס","de":"Steuer, Abgabe","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"כָּל אֶזְרָח חַיָּב לְשַׁלֵּם מִסִּים.","de":"Jeder Bürger muss Steuern zahlen.","form":""}],"id":63},{"he":"בְּרִיאוּת","de":"Gesundheit","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"סְפּוֹרְט טוֹב לַבְּרִיאוּת.","de":"Sport ist gut für die Gesundheit.","form":""}],"id":64},{"he":"טִפּוּל","de":"Behandlung, Pflege, Bearbeitung","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הַטִּפּוּל הֶחָדָשׁ עוֹזֵר לְהַרְבֵּה חוֹלִים.","de":"Die neue Behandlung hilft vielen Kranken.","form":""}],"id":65},{"he":"תְּרוּפָה","de":"Medikament, Arznei","pos":"Nomen","gender":"f","level":"B1","ex":[{"he":"צָרִיךְ לָקַחַת אֶת הַתְּרוּפָה פַּעֲמַיִם בְּיוֹם.","de":"Man muss das Medikament zweimal täglich einnehmen.","form":""}],"id":66},{"he":"מֶחְקָר","de":"Forschung, Studie, Untersuchung","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"מֶחְקָר חָדָשׁ מַרְאֶה תּוֹצָאוֹת מַפְתִּיעוֹת.","de":"Eine neue Studie zeigt überraschende Ergebnisse.","form":""}],"id":67},{"he":"מַדָּע","de":"Wissenschaft","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הַמַּדָּע מִתְקַדֵּם בִּצְעָדִים גְּדוֹלִים.","de":"Die Wissenschaft macht große Fortschritte.","form":""}],"id":68},{"he":"חִנּוּךְ","de":"Erziehung, Bildung(swesen)","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"הַחִנּוּךְ הוּא הַבָּסִיס שֶׁל כָּל חֶבְרָה.","de":"Die Bildung ist die Grundlage jeder Gesellschaft.","form":""}],"id":69},{"he":"הַשְׂכָּלָה","de":"(Aus-)Bildung, Bildungsstand","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"יֵשׁ לוֹ הַשְׂכָּלָה אֲקָדֵמִית בְּכַלְכָּלָה.","de":"Er hat eine akademische Ausbildung in Wirtschaft.","form":""}],"id":70},{"he":"כִּשָּׁרוֹן","de":"Talent, Begabung","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"יֵשׁ לָהּ כִּשָּׁרוֹן מְיֻחָד לְשָׂפוֹת.","de":"Sie hat eine besondere Begabung für Sprachen.","form":""}],"id":71},{"he":"הִתְנַהֲגוּת","de":"Verhalten, Benehmen","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"הַהִתְנַהֲגוּת שֶׁלּוֹ בַּפְּגִישָׁה הָיְתָה מוּזָרָה.","de":"Sein Verhalten in der Besprechung war seltsam.","form":""}],"id":72},{"he":"תַּחֲרוּת","de":"Wettbewerb, Konkurrenz","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"יֵשׁ תַּחֲרוּת קָשָׁה בֵּין הַחֲבָרוֹת.","de":"Es gibt einen harten Wettbewerb zwischen den Firmen.","form":""}],"id":73},{"he":"אַכְזָבָה","de":"Enttäuschung","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"הַהֶפְסֵד הָיָה אַכְזָבָה גְּדוֹלָה לָאוֹהֲדִים.","de":"Die Niederlage war eine große Enttäuschung für die Fans.","form":""}],"id":74},{"he":"צִפִּיָּה","de":"Erwartung","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"הַצִּפִּיּוֹת מֵהַסֶּרֶט הָיוּ גְּבוֹהוֹת מִדַּי.","de":"Die Erwartungen an den Film waren zu hoch.","form":""}],"id":75},{"he":"יִתְרוֹן","de":"Vorteil","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"לַנִּסָּיוֹן שֶׁלָּהּ יֵשׁ יִתְרוֹן בָּרוּר.","de":"Ihre Erfahrung ist ein klarer Vorteil.","form":""}],"id":76},{"he":"חִסָּרוֹן","de":"Nachteil, Mangel, Schwäche","pos":"Nomen","gender":"m","level":"B2","ex":[{"he":"לְכָל פִּתְרוֹן יֵשׁ יִתְרוֹנוֹת וְחֶסְרוֹנוֹת.","de":"Jede Lösung hat Vor- und Nachteile.","form":""}],"id":77},{"he":"מַסְקָנָה","de":"Schlussfolgerung, Fazit","pos":"Nomen","gender":"f","level":"B2","ex":[{"he":"הִגַּעְנוּ לְמַסְקָנָה שֶׁצָּרִיךְ לְשַׁנּוֹת כִּוּוּן.","de":"Wir sind zu dem Schluss gekommen, dass wir die Richtung ändern müssen.","form":""}],"id":78},{"he":"מְסֻבָּךְ","de":"kompliziert, verwickelt","pos":"Adjektiv","level":"B1","ex":[{"he":"הַמַּצָּב יוֹתֵר מְסֻבָּךְ מִמַּה שֶּׁחָשַׁבְנוּ.","de":"Die Lage ist komplizierter, als wir dachten.","form":""}],"id":79},{"he":"מֻצְלָח","de":"gelungen, erfolgreich","pos":"Adjektiv","level":"B1","ex":[{"he":"זֶה הָיָה עֶרֶב מֻצְלָח מְאוֹד.","de":"Das war ein sehr gelungener Abend.","form":""}],"id":80},{"he":"מְאֻכְזָב","de":"enttäuscht","pos":"Adjektiv","level":"B2","ex":[{"he":"הִיא נִרְאֵית מְאֻכְזֶבֶת מֵהַתְּשׁוּבָה.","de":"Sie wirkt von der Antwort enttäuscht.","form":""}],"id":81},{"he":"מַפְתִּיעַ","de":"überraschend","pos":"Adjektiv","level":"B2","ex":[{"he":"קִבַּלְנוּ תּוֹצָאָה מַפְתִּיעָה בַּנִּסּוּי.","de":"Wir haben im Experiment ein überraschendes Ergebnis erhalten.","form":""}],"id":82},{"he":"מְשַׁעֲמֵם","de":"langweilig","pos":"Adjektiv","level":"B1","ex":[{"he":"הַהַרְצָאָה הָיְתָה מְשַׁעֲמֶמֶת, אָז יָצָאתִי מֻקְדָּם.","de":"Der Vortrag war langweilig, also bin ich früher gegangen.","form":""}],"id":83},{"he":"מְרַתֵּק","de":"fesselnd, faszinierend, spannend","pos":"Adjektiv","level":"B2","ex":[{"he":"קָרָאתִי סֵפֶר מְרַתֵּק עַל הַהִיסְטוֹרְיָה שֶׁל יְרוּשָׁלַיִם.","de":"Ich habe ein fesselndes Buch über die Geschichte Jerusalems gelesen.","form":""}],"id":84},{"he":"יָעִיל","de":"effizient, wirksam","pos":"Adjektiv","level":"B2","ex":[{"he":"זֹאת דֶּרֶךְ יְעִילָה לִלְמֹד מִלִּים חֲדָשׁוֹת.","de":"Das ist eine effiziente Methode, um neue Wörter zu lernen.","form":""}],"id":85},{"he":"מְיֻתָּר","de":"überflüssig, unnötig","pos":"Adjektiv","level":"B2","ex":[{"he":"הַוִּכּוּחַ הַזֶּה לְגַמְרֵי מְיֻתָּר.","de":"Diese Diskussion ist völlig überflüssig.","form":""}],"id":86},{"he":"הֶכְרֵחִי","de":"notwendig, unerlässlich","pos":"Adjektiv","level":"C1","ex":[{"he":"שֵׁנָה טוֹבָה הֶכְרֵחִית לַבְּרִיאוּת.","de":"Guter Schlaf ist für die Gesundheit unerlässlich.","form":""}],"id":87},{"he":"מְקֻבָּל","de":"üblich, gängig, akzeptiert","pos":"Adjektiv","level":"B2","ex":[{"he":"זֶה לֹא מְקֻבָּל לְאַחֵר לְרֵאָיוֹן עֲבוֹדָה.","de":"Es ist nicht üblich, zu einem Vorstellungsgespräch zu spät zu kommen.","form":""}],"id":88},{"he":"מֻרְכָּב","de":"komplex, zusammengesetzt","pos":"Adjektiv","level":"B2","ex":[{"he":"זוֹהִי בְּעָיָה מֻרְכֶּבֶת עִם הַרְבֵּה צְדָדִים.","de":"Das ist ein komplexes Problem mit vielen Seiten.","form":""}],"id":89},{"he":"זָמִין","de":"verfügbar, erreichbar","pos":"Adjektiv","level":"B2","ex":[{"he":"אֲנִי לֹא זָמִין בֵּין שָׁלוֹשׁ לְחָמֵשׁ.","de":"Ich bin zwischen drei und fünf nicht erreichbar.","form":""}],"id":90},{"he":"אָמִין","de":"zuverlässig, glaubwürdig","pos":"Adjektiv","level":"B2","ex":[{"he":"הוּא עוֹבֵד אָמִין שֶׁאֶפְשָׁר לִסְמֹךְ עָלָיו.","de":"Er ist ein zuverlässiger Mitarbeiter, auf den man sich verlassen kann.","form":""}],"id":91},{"he":"גָּמִישׁ","de":"flexibel, biegsam","pos":"Adjektiv","level":"B2","ex":[{"he":"יֵשׁ לִי שְׁעוֹת עֲבוֹדָה גְּמִישׁוֹת.","de":"Ich habe flexible Arbeitszeiten.","form":""}],"id":92},{"he":"רָגִישׁ","de":"empfindlich, sensibel","pos":"Adjektiv","level":"B2","ex":[{"he":"זֶה נוֹשֵׂא רָגִישׁ, אָז דַּבֵּר בִּזְהִירוּת.","de":"Das ist ein heikles Thema, also sprich vorsichtig.","form":""}],"id":93},{"he":"עַצְמָאִי","de":"selbstständig, unabhängig","pos":"Adjektiv","level":"B2","ex":[{"he":"הִיא עוֹבֶדֶת כְּעַצְמָאִית כְּבָר חָמֵשׁ שָׁנִים.","de":"Sie arbeitet schon fünf Jahre als Selbstständige.","form":""}],"id":94},{"he":"כַּנִּרְאֶה","de":"anscheinend, wahrscheinlich","pos":"Adverb","level":"B1","ex":[{"he":"כַּנִּרְאֶה יֵרֵד גֶּשֶׁם מָחָר.","de":"Anscheinend wird es morgen regnen.","form":""}],"id":95},{"he":"בְּמִקְרֶה","de":"zufällig","pos":"Adverb","level":"B1","ex":[{"he":"פָּגַשְׁתִּי אוֹתוֹ בְּמִקְרֶה בָּרְחוֹב.","de":"Ich habe ihn zufällig auf der Straße getroffen.","form":""}],"id":96},{"he":"לְמַרְבֵּה הַצַּעַר","de":"bedauerlicherweise, leider (gehoben)","pos":"Ausdruck","level":"C1","ex":[{"he":"לְמַרְבֵּה הַצַּעַר, הָאֵרוּעַ בֻּטַּל.","de":"Bedauerlicherweise wurde die Veranstaltung abgesagt.","form":""}],"id":97},{"he":"לְעִתִּים קְרוֹבוֹת","de":"häufig, oft (gehoben)","pos":"Ausdruck","level":"B2","ex":[{"he":"אֲנַחְנוּ נִפְגָּשִׁים לְעִתִּים קְרוֹבוֹת בַּסּוּפֶּר.","de":"Wir begegnen uns häufig im Supermarkt.","form":""}],"id":98},{"he":"בְּעִקָּר","de":"hauptsächlich, vor allem","pos":"Adverb","level":"B1","ex":[{"he":"אֲנִי קוֹרֵא בְּעִקָּר סִפְרֵי עִיּוּן.","de":"Ich lese hauptsächlich Sachbücher.","form":""}],"id":99},{"he":"לְעֻמַּת זֹאת","de":"im Gegensatz dazu, hingegen","pos":"Ausdruck","level":"B2","ex":[{"he":"בַּחֹרֶף קַר מְאוֹד; בַּקַּיִץ, לְעֻמַּת זֹאת, חַם וְלַח.","de":"Im Winter ist es sehr kalt; im Sommer hingegen ist es heiß und feucht.","form":""}],"id":100},{"he":"אַף עַל פִּי כֵן","de":"dennoch, trotzdem (gehoben)","pos":"Ausdruck","level":"C1","ex":[{"he":"הָיָה קָשֶׁה, אַף עַל פִּי כֵן לֹא וִתַּרְנוּ.","de":"Es war schwer, dennoch haben wir nicht aufgegeben.","form":""}],"id":101},{"he":"בִּכְלָל","de":"überhaupt, allgemein","pos":"Adverb","level":"B1","ex":[{"he":"הוּא בִּכְלָל לֹא הֵבִין אֶת הַשְּׁאֵלָה.","de":"Er hat die Frage überhaupt nicht verstanden.","form":""}],"id":102}];
+
+/* ---------- Speicher ---------- */
+const KEY="ivrit-trainer-v1";
+let storageOk=true;
+try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); }
+catch(e){ storageOk=false; }
+let memStore={};
+function saveRaw(s){ if(storageOk){ try{localStorage.setItem(KEY,s);}catch(e){} } else memStore[KEY]=s; }
+function loadRaw(){ return storageOk ? localStorage.getItem(KEY) : (memStore[KEY]||null); }
+
+function today(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function addDays(dateStr,n){ const d=new Date(dateStr+"T12:00:00"); d.setDate(d.getDate()+n);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+let S=null;
+function defaultState(){ return {v:1, cards:{}, newPerDay:10,
+  modes:{flash:true,mc:true,type:true},
+  introducedOn:{}, lastStudyDay:null, streak:0, doneToday:{} }; }
+function load(){ const r=loadRaw(); if(r){ try{ S=JSON.parse(r); }catch(e){ S=defaultState(); } } else S=defaultState();
+  if(!S.modes) S.modes={flash:true,mc:true,type:true}; }
+function save(){ saveRaw(JSON.stringify(S)); }
+
+function card(id){ if(!S.cards[id]) S.cards[id]={ef:2.5,reps:0,ivl:0,due:null,intro:false,dir:0,lapses:0,views:0};
+  return S.cards[id]; }
+
+/* ---------- SM-2 ---------- */
+function grade(c,q){ // q: 0..5
+  if(q<3){ c.reps=0; c.ivl=1; c.lapses++; c.due=addDays(today(),1); }
+  else{
+    if(c.reps===0) c.ivl=1;
+    else if(c.reps===1) c.ivl=6;
+    else c.ivl=Math.round(c.ivl*c.ef);
+    if(q===5 && c.reps>0) c.ivl=Math.round(c.ivl*1.15);
+    c.reps++;
+    c.ef=Math.max(1.3, c.ef+(0.1-(5-q)*(0.08+(5-q)*0.02)));
+    c.due=addDays(today(),c.ivl);
+  }
+  c.dir=1-c.dir; c.views++;
+}
+
+/* ---------- Hilfsfunktionen ---------- */
+const NIKUD=/[֑-ׇ]/g;
+function stripNikud(s){ return s.replace(NIKUD,""); }
+function normHe(s){ return stripNikud(s).replace(/[^א-ת]/g,""); }
+function normDe(s){ return s.toLowerCase().replace(/\(.*?\)/g,"").replace(/[.!?,;:]/g,"").trim(); }
+function deVariants(s){ return s.split(/[,;]/).map(x=>normDe(x)).filter(x=>x.length>0); }
+function lev(a,b){ if(Math.abs(a.length-b.length)>1) return 99;
+  const m=[...Array(a.length+1)].map((_,i)=>[i,...Array(b.length)]);
+  for(let j=0;j<=b.length;j++) m[0][j]=j;
+  for(let i=1;i<=a.length;i++) for(let j=1;j<=b.length;j++)
+    m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return m[a.length][b.length]; }
+function deMatch(input,target){ const inp=normDe(input); if(!inp) return false;
+  for(const v of deVariants(target)){ if(inp===v) return true;
+    if(v.length>4 && lev(inp,v)<=1) return true;
+    for(const w of v.split(/\s+/)) if(w.length>3 && inp===w) return true; }
+  return false; }
+const STOP=new Set(["der","die","das","ein","eine","einem","einen","einer","eines","dem","den","des","am","im","ans","ins","an","in","zu","zum","zur","auf","und","es","ist","sind","hat","haben"]);
+function deTokens(s){ return s.toLowerCase().replace(/[.,!?;:„“"()–-]/g," ").split(/\s+/).filter(w=>w && !STOP.has(w)); }
+function sentMatch(input,target){
+  const a=deTokens(input), b=deTokens(target);
+  if(b.length===0 || a.length<2) return false;
+  let hit=0;
+  for(const w of b){ if(a.some(x=>x===w || (w.length>4 && lev(x,w)<=1))) hit++; }
+  return hit/b.length>=0.7;
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function pickEx(w,c){ return w.ex[(c.views||0)%w.ex.length]; }
+function byId(id){ return VOCAB.find(w=>w.id===id); }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+/* ---------- Sitzung ---------- */
+let queue=[], qTotal=0, current=null, answered=false;
+
+function buildQueue(){
+  const t=today();
+  const due=[], fresh=[];
+  for(const w of VOCAB){ const c=S.cards[w.id];
+    if(c && c.intro){ if(c.due && c.due<=t) due.push(w.id); } }
+  const introToday=(S.introducedOn[t]||[]);
+  let slots=S.newPerDay-introToday.length;
+  for(const w of VOCAB){ if(slots<=0) break;
+    const c=S.cards[w.id];
+    if(!c || !c.intro){ fresh.push(w.id); slots--; } }
+  queue=[...shuffle(due), ...fresh];
+  qTotal=queue.length;
+}
+
+function updateStats(){
+  const t=today();
+  let due=0, learned=0;
+  for(const w of VOCAB){ const c=S.cards[w.id];
+    if(c && c.intro){ learned++; if(c.due && c.due<=t) due++; } }
+  document.getElementById("stDue").textContent=due;
+  document.getElementById("stNew").textContent=Math.max(0,S.newPerDay-((S.introducedOn[t]||[]).length));
+  document.getElementById("stLearned").textContent=learned;
+  document.getElementById("stStreak").textContent=S.streak;
+  const doneCount=qTotal-queue.length;
+  document.getElementById("progBar").style.width=(qTotal? (100*doneCount/qTotal):100)+"%";
+}
+
+function touchStreak(){
+  const t=today();
+  if(S.lastStudyDay===t) return;
+  S.streak = (S.lastStudyDay===addDays(t,-1)) ? S.streak+1 : 1;
+  S.lastStudyDay=t;
+}
+
+/* ---------- Rendering ---------- */
+const stage=document.getElementById("stage");
+
+function next(){
+  if(queue.length===0){ renderDone(); updateStats(); return; }
+  const id=queue[0];
+  const w=byId(id), c=card(id);
+  answered=false;
+  if(!c.intro){ renderIntro(w,c); }
+  else{
+    const modes=[];
+    if(S.modes.flash) modes.push("flash");
+    if(S.modes.mc) modes.push("mc");
+    if(S.modes.type) modes.push("type");
+    if(modes.length===0) modes.push("flash");
+    const mode=modes[Math.floor(Math.random()*modes.length)];
+    const dir=c.dir===0 ? "he2de" : "de2he";
+    if(mode==="flash") renderFlash(w,c,dir);
+    else if(mode==="mc") renderMc(w,c,dir);
+    else renderType(w,c,dir);
+  }
+  updateStats();
+}
+
+function metaLine(w){
+  let m=w.pos;
+  if(w.binyan) m+=" · "+w.binyan+" · Wurzel "+w.root;
+  if(w.gender) m+=" · "+w.gender;
+  return m+" · "+w.level;
+}
+
+function renderIntro(w,c){
+  const ex=w.ex[0];
+  stage.innerHTML=`<div class="card">
+    <span class="tag">✨ Neues Wort</span>
+    <div class="he-big">${w.he}</div>
+    <div class="meta">${esc(metaLine(w))}</div>
+    <div class="de-ex" id="guessHint">Was könnte das bedeuten? Erst raten, dann umdrehen!</div>
+    <div id="back" class="hidden" style="width:100%; border-top:1px solid var(--line); padding-top:14px; display:flex; flex-direction:column; gap:12px; align-items:center;">
+      <div class="de-big">${esc(w.de)}</div>
+      <div class="he-ex">${ex.he}</div>
+      <div class="de-ex">${esc(ex.de)}</div>
+      ${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}
+    </div>
+    <div class="btnrow" id="rowFlip"><button class="btn" id="bFlip">Umdrehen 🔄</button></div>
+    <div class="btnrow hidden" id="rowOk"><button class="btn" id="bOk">Verstanden ✓</button></div>
+  </div>`;
+  document.getElementById("bFlip").onclick=()=>{
+    document.getElementById("back").classList.remove("hidden");
+    document.getElementById("guessHint").classList.add("hidden");
+    document.getElementById("rowFlip").classList.add("hidden");
+    document.getElementById("rowOk").classList.remove("hidden");
+  };
+  document.getElementById("bOk").onclick=()=>{
+    c.intro=true; c.due=today(); c.views=1;
+    const t=today(); if(!S.introducedOn[t]) S.introducedOn[t]=[];
+    S.introducedOn[t].push(w.id);
+    touchStreak();
+    queue.shift();
+    queue.splice(Math.min(3,queue.length),0,w.id); // wenige Karten später aktiv abfragen
+    save(); next();
+  };
+}
+
+function finishCard(w,c,q,requeue){
+  grade(c,q); touchStreak();
+  queue.shift();
+  if(requeue) queue.push(w.id);
+  save(); next();
+}
+
+function renderFlash(w,c,dir){
+  const ex=pickEx(w,c);
+  const front = dir==="he2de"
+    ? `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
+    : `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`;
+  const back = dir==="he2de"
+    ? `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div><div class="meta">${esc(metaLine(w))}</div>`
+    : `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}<div class="meta">${esc(metaLine(w))}</div>`;
+  stage.innerHTML=`<div class="card">
+    <span class="tag">${dir==="he2de"?"🇮🇱 → 🇩🇪":"🇩🇪 → 🇮🇱"} · Karteikarte</span>
+    ${front}
+    <div id="back" class="hidden" style="width:100%; border-top:1px solid var(--line); padding-top:14px; display:flex; flex-direction:column; gap:10px; align-items:center;">${back}</div>
+    <div class="btnrow" id="rowShow"><button class="btn" id="bShow">Antwort zeigen</button></div>
+    <div class="btnrow hidden" id="rowGrade">
+      <button class="btn bad grade" data-q="0">Nochmal<small>&lt; 1 Tag</small></button>
+      <button class="btn warn grade" data-q="3">Schwer</button>
+      <button class="btn good grade" data-q="4">Gut</button>
+      <button class="btn sec grade" data-q="5">Leicht</button>
+    </div>
+  </div>`;
+  document.getElementById("bShow").onclick=()=>{
+    document.getElementById("back").classList.remove("hidden");
+    document.getElementById("rowShow").classList.add("hidden");
+    document.getElementById("rowGrade").classList.remove("hidden");
+  };
+  document.querySelectorAll(".grade").forEach(b=>b.onclick=()=>{
+    const q=+b.dataset.q; finishCard(w,c,q,q<3);
+  });
+}
+
+function renderMc(w,c,dir){
+  const ex=pickEx(w,c);
+  const pool=shuffle(VOCAB.filter(x=>x.id!==w.id && x.pos===w.pos));
+  const dis=pool.slice(0,3);
+  while(dis.length<3){ const r=VOCAB[Math.floor(Math.random()*VOCAB.length)];
+    if(r.id!==w.id && !dis.includes(r)) dis.push(r); }
+  const opts=shuffle([w,...dis]);
+  const q = dir==="he2de"
+    ? `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
+    : `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`;
+  stage.innerHTML=`<div class="card">
+    <span class="tag">${dir==="he2de"?"🇮🇱 → 🇩🇪":"🇩🇪 → 🇮🇱"} · Multiple Choice</span>
+    ${q}
+    <div class="choices">${opts.map(o=>
+      dir==="he2de"
+        ? `<button class="choice" data-id="${o.id}">${esc(o.de)}</button>`
+        : `<button class="choice he" data-id="${o.id}">${o.he}</button>`).join("")}</div>
+    <div class="feedback" id="fb"></div>
+    <div class="btnrow hidden" id="rowNext"><button class="btn" id="bNext">Weiter →</button></div>
+  </div>`;
+  document.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{
+    if(answered) return; answered=true;
+    const ok=+b.dataset.id===w.id;
+    b.classList.add(ok?"correct":"wrong");
+    document.querySelectorAll(".choice").forEach(x=>{ if(+x.dataset.id===w.id) x.classList.add("correct"); x.disabled=true; });
+    const fb=document.getElementById("fb");
+    if(ok){ fb.textContent="Richtig! ✓"; fb.className="feedback ok"; }
+    else{ fb.innerHTML="Leider nein."; fb.className="feedback no"; }
+    document.getElementById("rowNext").classList.remove("hidden");
+    document.getElementById("bNext").onclick=()=>finishCard(w,c, ok?4:1, !ok);
+  });
+}
+
+function renderType(w,c,dir){
+  const ex=pickEx(w,c);
+  const q = dir==="he2de"
+    ? `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
+    : `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`;
+  stage.innerHTML=`<div class="card">
+    <span class="tag">${dir==="he2de"?"🇮🇱 → 🇩🇪":"🇩🇪 → 🇮🇱"} · Schreiben</span>
+    ${q}
+    <div class="de-ex">${dir==="he2de"
+      ? "Was bedeutet das <b>Wort</b> oben? Grundform genügt – oder übersetze den ganzen Satz."
+      : "Wie heißt das Wort auf Hebräisch? (Grundform, ohne Nikud)"}</div>
+    <input class="answer ${dir==="de2he"?"he":""}" id="inp" autocomplete="off" autocapitalize="off"
+      placeholder="${dir==="he2de"?"Bedeutung oder Satzübersetzung…":"עברית (ohne Nikud OK)"}">
+    <div class="feedback" id="fb"></div>
+    <div id="sol" class="hidden" style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;"></div>
+    <div class="btnrow" id="rowCheck"><button class="btn" id="bCheck">Prüfen</button>
+      <button class="btn sec" id="bSkip">Weiß nicht</button></div>
+    <div class="btnrow hidden" id="rowNext">
+      <button class="btn sec hidden" id="bOverride">War doch richtig</button>
+      <button class="btn" id="bNext">Weiter →</button></div>
+  </div>`;
+  const inp=document.getElementById("inp");
+  setTimeout(()=>inp.focus(),50);
+  let result=null;
+  function showSolution(){
+    const sol=document.getElementById("sol");
+    sol.classList.remove("hidden");
+    sol.innerHTML = dir==="he2de"
+      ? `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`
+      : `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>`;
+  }
+  function evaluate(skip){
+    if(answered) return; answered=true;
+    const val=inp.value.trim();
+    let ok=false;
+    if(!skip && val){ ok = dir==="he2de" ? (deMatch(val,w.de) || sentMatch(val,ex.de)) : normHe(val)===normHe(w.he); }
+    result=ok;
+    const fb=document.getElementById("fb");
+    if(ok){ fb.textContent="Richtig! ✓"; fb.className="feedback ok"; }
+    else{ fb.textContent=skip||!val?"Hier die Lösung:":"Nicht ganz –"; fb.className="feedback no";
+      if(!skip && val) document.getElementById("bOverride").classList.remove("hidden"); }
+    showSolution();
+    inp.disabled=true;
+    document.getElementById("rowCheck").classList.add("hidden");
+    document.getElementById("rowNext").classList.remove("hidden");
+  }
+  document.getElementById("bCheck").onclick=()=>evaluate(false);
+  document.getElementById("bSkip").onclick=()=>evaluate(true);
+  inp.addEventListener("keydown",e=>{ if(e.key==="Enter") evaluate(false); });
+  document.getElementById("bOverride").onclick=()=>{ result=true;
+    const fb=document.getElementById("fb"); fb.textContent="Als richtig gewertet ✓"; fb.className="feedback ok";
+    document.getElementById("bOverride").classList.add("hidden"); };
+  document.getElementById("bNext").onclick=()=>finishCard(w,c, result?4:1, !result);
+}
+
+function renderDone(){
+  const t=today();
+  let tomorrow=0;
+  for(const w of VOCAB){ const c=S.cards[w.id];
+    if(c&&c.intro&&c.due===addDays(t,1)) tomorrow++; }
+  const introToday=(S.introducedOn[t]||[]).length;
+  stage.innerHTML=`<div class="card done">
+    <div class="big">🎉</div>
+    <div class="de-big">Fertig für heute!</div>
+    <div class="meta">${introToday} neue Wörter gelernt · Serie: ${S.streak} Tag(e) 🔥<br>Morgen warten ${tomorrow} Wiederholungen auf dich.</div>
+    <div class="btnrow"><button class="btn sec" id="bMore">+5 neue Wörter lernen</button></div>
+  </div>`;
+  document.getElementById("bMore").onclick=()=>{
+    let added=0;
+    for(const w of VOCAB){ if(added>=5) break;
+      const c=S.cards[w.id]; if(!c||!c.intro){ queue.push(w.id); added++; } }
+    qTotal+=added;
+    if(added>0){ next(); }
+  };
+}
+
+/* ---------- Einstellungen / Liste ---------- */
+function bindUI(){
+  const mS=document.getElementById("modalSettings"), mL=document.getElementById("modalList");
+  document.getElementById("btnSettings").onclick=()=>{
+    document.getElementById("setNew").value=S.newPerDay;
+    document.getElementById("mFlash").checked=S.modes.flash;
+    document.getElementById("mMc").checked=S.modes.mc;
+    document.getElementById("mType").checked=S.modes.type;
+    mS.classList.remove("hidden"); };
+  document.getElementById("btnCloseSettings").onclick=()=>{
+    S.newPerDay=+document.getElementById("setNew").value;
+    S.modes.flash=document.getElementById("mFlash").checked;
+    S.modes.mc=document.getElementById("mMc").checked;
+    S.modes.type=document.getElementById("mType").checked;
+    save(); mS.classList.add("hidden"); buildQueue(); next(); };
+  document.getElementById("btnExport").onclick=()=>{
+    const blob=new Blob([JSON.stringify(S)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="ivrit-fortschritt-"+today()+".json"; a.click(); };
+  document.getElementById("btnImportClick").onclick=()=>document.getElementById("fileImport").click();
+  document.getElementById("fileImport").onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ S=JSON.parse(r.result); save(); mS.classList.add("hidden"); buildQueue(); next(); }
+      catch(err){ alert("Datei konnte nicht gelesen werden."); } };
+    r.readAsText(f); };
+  document.getElementById("btnReset").onclick=()=>{
+    if(confirm("Wirklich den gesamten Lernfortschritt löschen?")){
+      S=defaultState(); save(); mS.classList.add("hidden"); buildQueue(); next(); } };
+  document.getElementById("btnList").onclick=()=>{ renderList(""); mL.classList.remove("hidden"); };
+  document.getElementById("btnCloseList").onclick=()=>mL.classList.add("hidden");
+  document.getElementById("listSearch").oninput=e=>renderList(e.target.value);
+}
+function renderList(q){
+  q=q.toLowerCase();
+  const rows=VOCAB.filter(w=> !q || w.de.toLowerCase().includes(q) || stripNikud(w.he).includes(q) || w.he.includes(q));
+  document.getElementById("listCount").textContent=rows.length+" / "+VOCAB.length;
+  document.getElementById("listBody").innerHTML=rows.map(w=>{
+    const c=S.cards[w.id];
+    const st=c&&c.intro ? `gelernt · nächste Wdh. ${c.due||"—"}` : "noch nicht gelernt";
+    return `<div class="listrow"><span class="he">${w.he}</span><span class="de">${esc(w.de)} · ${esc(w.pos)}${w.binyan?" ("+w.binyan+")":""} · ${w.level} · ${st}</span></div>`;
+  }).join("");
+}
+
+/* ---------- Start ---------- */
+load();
+if(!storageOk) document.getElementById("memWarn").classList.remove("hidden");
+bindUI();
+buildQueue();
+next();
+</script>
+</body>
+</html>
