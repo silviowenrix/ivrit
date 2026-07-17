@@ -76,7 +76,12 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
 .hidden{display:none !important}
 .modal{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:50;}
 .sheet{background:var(--card); width:100%; max-width:520px; border-radius:20px 20px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); max-height:86dvh; overflow-y:auto;}
-.sheet h2{margin:0 0 14px; font-size:1.1rem;}
+.sheet h2{margin:0; font-size:1.1rem;}
+.sheethead{position:sticky; top:0; background:var(--card); z-index:3; padding:2px 0 10px; margin-bottom:4px; border-bottom:1px solid var(--line);}
+.sheethead .row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
+.sheethead .searchbox{margin-bottom:0;}
+.closex{background:var(--chip); border:none; color:var(--ink); width:34px; height:34px; border-radius:50%; font-size:1.1rem; cursor:pointer; flex:0 0 auto; line-height:1;}
+.closex:active{filter:brightness(.9)}
 .setting{display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); gap:10px;}
 .setting label{font-size:.95rem;}
 .setting select{font-size:1rem; padding:6px 10px; border-radius:9px; border:1px solid var(--line); background:var(--bg); color:var(--ink);}
@@ -109,7 +114,8 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
 </div>
 
 <div id="modalSettings" class="modal hidden"><div class="sheet">
-  <h2>Einstellungen</h2>
+  <div class="sheethead"><div class="row"><h2>Einstellungen</h2>
+    <button class="closex" id="btnCloseSettingsX" title="Schließen">✕</button></div></div>
   <div class="setting"><label>Neue Wörter pro Tag</label>
     <select id="setNew"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
   <div class="setting"><label>Karteikarte (Selbsteinschätzung)</label><input type="checkbox" id="mFlash" checked></div>
@@ -124,10 +130,12 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
 </div></div>
 
 <div id="modalList" class="modal hidden"><div class="sheet">
-  <h2>Wortliste (<span id="listCount"></span>)</h2>
-  <input class="searchbox" id="listSearch" placeholder="Suchen (Deutsch oder Hebräisch)…">
+  <div class="sheethead">
+    <div class="row"><h2>Wortliste (<span id="listCount"></span>)</h2>
+      <button class="closex" id="btnCloseList" title="Schließen">✕</button></div>
+    <input class="searchbox" id="listSearch" placeholder="Suchen (Deutsch oder Hebräisch)…">
+  </div>
   <div id="listBody"></div>
-  <div class="btnrow"><button class="btn" id="btnCloseList">Schließen</button></div>
 </div></div>
 
 <script>
@@ -460,12 +468,14 @@ function bindUI(){
     document.getElementById("mMc").checked=S.modes.mc;
     document.getElementById("mType").checked=S.modes.type;
     mS.classList.remove("hidden"); };
-  document.getElementById("btnCloseSettings").onclick=()=>{
+  const closeSettings=()=>{
     S.newPerDay=+document.getElementById("setNew").value;
     S.modes.flash=document.getElementById("mFlash").checked;
     S.modes.mc=document.getElementById("mMc").checked;
     S.modes.type=document.getElementById("mType").checked;
     save(); mS.classList.add("hidden"); buildQueue(); next(); };
+  document.getElementById("btnCloseSettings").onclick=closeSettings;
+  document.getElementById("btnCloseSettingsX").onclick=closeSettings;
   document.getElementById("btnExport").onclick=()=>{
     const blob=new Blob([JSON.stringify(S)],{type:"application/json"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
