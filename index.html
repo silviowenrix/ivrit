@@ -104,7 +104,7 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
   </header>
   <div id="memWarn" class="memwarn hidden">⚠️ Der Speicher deines Browsers ist nicht verfügbar – der Fortschritt geht beim Schließen verloren. Öffne die Datei direkt im Browser (Safari/Chrome) statt in einer Vorschau, oder nutze Export/Import in den Einstellungen.</div>
   <div class="statbar">
-    <div class="stat"><b id="stDue">0</b><span>Fällig</span></div>
+    <div class="stat"><b id="stDue">0</b><span>Übrig</span></div>
     <div class="stat"><b id="stNew">0</b><span>Neu heute</span></div>
     <div class="stat"><b id="stLearned">0</b><span>Gelernt</span></div>
     <div class="stat"><b id="stStreak">0</b><span>Serie 🔥</span></div>
@@ -231,10 +231,10 @@ function buildQueue(){
 
 function updateStats(){
   const t=today();
-  let due=0, learned=0;
+  let learned=0;
   for(const w of VOCAB){ const c=S.cards[w.id];
-    if(c && c.intro){ learned++; if(c.due && c.due<=t) due++; } }
-  document.getElementById("stDue").textContent=due;
+    if(c && c.intro) learned++; }
+  document.getElementById("stDue").textContent=queue.length; // verbleibende Karten dieser Runde
   document.getElementById("stNew").textContent=Math.max(0,S.newPerDay-((S.introducedOn[t]||[]).length));
   document.getElementById("stLearned").textContent=learned;
   document.getElementById("stStreak").textContent=S.streak;
