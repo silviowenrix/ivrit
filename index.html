@@ -47,6 +47,11 @@ header h1 .he{font-family:var(--he-font); font-size:1.25rem;}
 .de-ex{font-size:1rem; color:var(--muted); line-height:1.45;}
 .forminfo{font-size:.8rem; color:var(--warn); font-weight:600;}
 .meta{font-size:.85rem; color:var(--muted);}
+.spk{background:var(--chip); border:none; color:var(--accent); width:40px; height:40px; border-radius:50%;
+  font-size:1.2rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; line-height:1; padding:0; margin:2px;}
+.spk.sm{width:32px; height:32px; font-size:1rem;}
+.spk:active{filter:brightness(.92)}
+.spk.playing{background:var(--accent); color:var(--accent-ink);}
 .btnrow{display:flex; gap:10px; width:100%; margin-top:14px;}
 .btn{flex:1; border:none; border-radius:13px; padding:15px 8px; font-size:1rem; font-weight:600; cursor:pointer;
   background:var(--accent); color:var(--accent-ink);}
@@ -252,6 +257,20 @@ function touchStreak(){
 /* ---------- Rendering ---------- */
 const stage=document.getElementById("stage");
 
+// ---- Audio (fertige Carmit-Dateien im Ordner audio/) ----
+let curAudio=null;
+function playClip(base,btn){
+  try{
+    if(curAudio){ curAudio.pause(); }
+    const a=new Audio("audio/"+base+".m4a");
+    curAudio=a;
+    if(btn){ btn.classList.add("playing"); a.onended=a.onerror=()=>btn.classList.remove("playing"); }
+    a.play().catch(()=>{ if(btn) btn.classList.remove("playing"); });
+  }catch(e){}
+}
+const spk=(base,sm)=>`<button class="spk${sm?' sm':''}" data-clip="${base}" aria-label="Anhören">🔊</button>`;
+document.addEventListener("click",e=>{ const b=e.target.closest(".spk"); if(b){ e.stopPropagation(); playClip(b.dataset.clip,b); } });
+
 function next(){
   if(queue.length===0){ renderDone(); updateStats(); return; }
   const id=queue[0];
@@ -285,11 +304,12 @@ function renderIntro(w,c){
   stage.innerHTML=`<div class="card">
     <span class="tag">✨ Neues Wort</span>
     <div class="he-big">${w.he}</div>
+    ${spk('w'+w.id)}
     <div class="meta">${esc(metaLine(w))}</div>
     <div class="de-ex" id="guessHint">Was könnte das bedeuten? Erst raten, dann umdrehen!</div>
     <div id="back" class="hidden" style="width:100%; border-top:1px solid var(--line); padding-top:14px; display:flex; flex-direction:column; gap:12px; align-items:center;">
       <div class="de-big">${esc(w.de)}</div>
-      <div class="he-ex">${ex.he}</div>
+      <div class="he-ex">${ex.he} ${spk('s'+w.id+'_1',true)}</div>
       <div class="de-ex">${esc(ex.de)}</div>
       ${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}
     </div>
@@ -322,12 +342,13 @@ function finishCard(w,c,q,requeue){
 
 function renderFlash(w,c,dir){
   const ex=pickEx(w,c);
+  const eb='s'+w.id+'_'+(((c.views||0)%w.ex.length)+1);
   const front = dir==="he2de"
-    ? `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
+    ? `<div class="he-big">${w.he}</div>${spk('w'+w.id)}<div class="he-ex">${ex.he} ${spk(eb,true)}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
     : `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`;
   const back = dir==="he2de"
     ? `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div><div class="meta">${esc(metaLine(w))}</div>`
-    : `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}<div class="meta">${esc(metaLine(w))}</div>`;
+    : `<div class="he-big">${w.he}</div>${spk('w'+w.id)}<div class="he-ex">${ex.he} ${spk(eb,true)}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}<div class="meta">${esc(metaLine(w))}</div>`;
   stage.innerHTML=`<div class="card">
     <span class="tag">${dir==="he2de"?"🇮🇱 → 🇩🇪":"🇩🇪 → 🇮🇱"} · Karteikarte</span>
     ${front}
@@ -357,8 +378,9 @@ function renderMc(w,c,dir){
   while(dis.length<3){ const r=VOCAB[Math.floor(Math.random()*VOCAB.length)];
     if(r.id!==w.id && !dis.includes(r)) dis.push(r); }
   const opts=shuffle([w,...dis]);
+  const eb='s'+w.id+'_'+(((c.views||0)%w.ex.length)+1);
   const q = dir==="he2de"
-    ? `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
+    ? `<div class="he-big">${w.he}</div>${spk('w'+w.id)}<div class="he-ex">${ex.he} ${spk(eb,true)}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
     : `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`;
   stage.innerHTML=`<div class="card">
     <span class="tag">${dir==="he2de"?"🇮🇱 → 🇩🇪":"🇩🇪 → 🇮🇱"} · Multiple Choice</span>
@@ -385,8 +407,9 @@ function renderMc(w,c,dir){
 
 function renderType(w,c,dir){
   const ex=pickEx(w,c);
+  const eb='s'+w.id+'_'+(((c.views||0)%w.ex.length)+1);
   const q = dir==="he2de"
-    ? `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
+    ? `<div class="he-big">${w.he}</div>${spk('w'+w.id)}<div class="he-ex">${ex.he} ${spk(eb,true)}</div>${ex.form?`<div class="forminfo">${esc(ex.form)}</div>`:""}`
     : `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`;
   stage.innerHTML=`<div class="card">
     <span class="tag">${dir==="he2de"?"🇮🇱 → 🇩🇪":"🇩🇪 → 🇮🇱"} · Schreiben</span>
@@ -412,7 +435,7 @@ function renderType(w,c,dir){
     sol.classList.remove("hidden");
     sol.innerHTML = dir==="he2de"
       ? `<div class="de-big">${esc(w.de)}</div><div class="de-ex">${esc(ex.de)}</div>`
-      : `<div class="he-big">${w.he}</div><div class="he-ex">${ex.he}</div>`;
+      : `<div class="he-big">${w.he}</div>${spk('w'+w.id)}<div class="he-ex">${ex.he} ${spk(eb,true)}</div>`;
   }
   function evaluate(skip){
     if(answered) return; answered=true;
@@ -501,7 +524,7 @@ function renderList(q){
   document.getElementById("listBody").innerHTML=rows.map(w=>{
     const c=S.cards[w.id];
     const st=c&&c.intro ? `gelernt · nächste Wdh. ${c.due||"—"}` : "noch nicht gelernt";
-    return `<div class="listrow"><span class="he">${w.he}</span><span class="de">${esc(w.de)} · ${esc(w.pos)}${w.binyan?" ("+w.binyan+")":""} · ${w.level} · ${st}</span></div>`;
+    return `<div class="listrow"><span class="he">${w.he} ${spk('w'+w.id,true)}</span><span class="de">${esc(w.de)} · ${esc(w.pos)}${w.binyan?" ("+w.binyan+")":""} · ${w.level} · ${st}</span></div>`;
   }).join("");
 }
 
