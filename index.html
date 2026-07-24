@@ -92,6 +92,20 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
 .setting select{font-size:1rem; padding:6px 10px; border-radius:9px; border:1px solid var(--line); background:var(--bg); color:var(--ink);}
 .setting input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
 .smallnote{font-size:.78rem; color:var(--muted); margin-top:12px; line-height:1.5;}
+.calstats{display:flex; gap:8px; margin:4px 0 14px;}
+.calstats .s{flex:1; background:var(--chip); border-radius:10px; padding:8px; text-align:center;}
+.calstats .s b{display:block; font-size:1.2rem;}
+.calstats .s span{font-size:.66rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+.calnav{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.calnav button{background:var(--chip); border:none; color:var(--ink); width:38px; height:38px; border-radius:10px; font-size:1.3rem; cursor:pointer; line-height:1;}
+.calnav button:active{filter:brightness(.9)}
+.calnav b{font-size:1rem;}
+.calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
+.cald{aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:9px; font-size:.9rem; color:var(--ink);}
+.cald.head{color:var(--muted); font-size:.68rem; font-weight:700; aspect-ratio:auto; padding:2px 0;}
+.cald.empty{visibility:hidden;}
+.cald.learned{background:var(--accent); color:var(--accent-ink); font-weight:700;}
+.cald.today{outline:2px solid var(--warn); outline-offset:-2px;}
 .listrow{padding:10px 0; border-bottom:1px solid var(--line);}
 .listrow .he{font-family:var(--he-font); font-size:1.3rem; direction:rtl; display:block;}
 .listrow .de{font-size:.9rem; color:var(--muted);}
@@ -112,7 +126,7 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
     <div class="stat"><b id="stDue">0</b><span>Übrig</span></div>
     <div class="stat"><b id="stNew">0</b><span>Neu heute</span></div>
     <div class="stat"><b id="stLearned">0</b><span>Gelernt</span></div>
-    <div class="stat"><b id="stStreak">0</b><span>Serie 🔥</span></div>
+    <div class="stat" id="tileStreak" style="cursor:pointer" title="Lernkalender öffnen"><b id="stStreak">0</b><span>Serie 🔥</span></div>
   </div>
   <div class="progress"><i id="progBar" style="width:0%"></i></div>
   <div id="stage"></div>
@@ -132,6 +146,19 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
   <div class="btnrow"><button class="btn bad" id="btnReset">Fortschritt zurücksetzen</button></div>
   <p class="smallnote">Spaced Repetition nach SM-2: Wörter, die du gut kennst, kommen in wachsenden Abständen wieder (1 Tag → 6 Tage → Wochen → Monate). Fehler setzen das Intervall zurück. Für die Schreibübung Deutsch→Hebräisch brauchst du die hebräische Tastatur auf deinem Handy (Einstellungen → Tastatur). Nikud musst du nicht mitschreiben.</p>
   <div class="btnrow"><button class="btn" id="btnCloseSettings">Schließen</button></div>
+</div></div>
+
+<div id="modalCal" class="modal hidden"><div class="sheet">
+  <div class="sheethead"><div class="row"><h2>Lernkalender</h2>
+    <button class="closex" id="btnCloseCal" title="Schließen">✕</button></div></div>
+  <div class="calstats">
+    <div class="s"><b id="calStreak">0</b><span>Serie 🔥</span></div>
+    <div class="s"><b id="calTotal">0</b><span>Lerntage</span></div>
+    <div class="s"><b id="calBest">0</b><span>Rekord</span></div>
+  </div>
+  <div class="calnav"><button id="calPrev">‹</button><b id="calTitle"></b><button id="calNext">›</button></div>
+  <div class="calgrid" id="calGrid"></div>
+  <p class="smallnote" style="margin-top:14px">Blaue Tage = gelernt. Der orange Rahmen ist heute. Ältere Tage wurden aus deinem bisherigen Fortschritt nachgetragen.</p>
 </div></div>
 
 <div id="modalList" class="modal hidden"><div class="sheet">
@@ -163,9 +190,16 @@ function addDays(dateStr,n){ const d=new Date(dateStr+"T12:00:00"); d.setDate(d.
 let S=null;
 function defaultState(){ return {v:1, cards:{}, newPerDay:10,
   modes:{flash:true,mc:true,type:true},
-  introducedOn:{}, lastStudyDay:null, streak:0, doneToday:{} }; }
+  introducedOn:{}, studyDays:{}, lastStudyDay:null, streak:0, doneToday:{} }; }
+function migrate(){
+  if(!S.modes) S.modes={flash:true,mc:true,type:true};
+  if(!S.studyDays){ S.studyDays={};                 // Lerntage nachfüllen aus vorhandenen Daten
+    for(const d in (S.introducedOn||{})) S.studyDays[d]=true;
+    if(S.lastStudyDay) S.studyDays[S.lastStudyDay]=true;
+  }
+}
 function load(){ const r=loadRaw(); if(r){ try{ S=JSON.parse(r); }catch(e){ S=defaultState(); } } else S=defaultState();
-  if(!S.modes) S.modes={flash:true,mc:true,type:true}; }
+  migrate(); }
 function save(){ saveRaw(JSON.stringify(S)); }
 
 function card(id){ if(!S.cards[id]) S.cards[id]={ef:2.5,reps:0,ivl:0,due:null,intro:false,dir:0,lapses:0,views:0};
@@ -249,6 +283,8 @@ function updateStats(){
 
 function touchStreak(){
   const t=today();
+  if(!S.studyDays) S.studyDays={};
+  S.studyDays[t]=true;              // jeden Lerntag markieren (auch reine Wiederholungstage)
   if(S.lastStudyDay===t) return;
   S.streak = (S.lastStudyDay===addDays(t,-1)) ? S.streak+1 : 1;
   S.lastStudyDay=t;
@@ -507,7 +543,7 @@ function bindUI(){
   document.getElementById("fileImport").onchange=e=>{
     const f=e.target.files[0]; if(!f) return;
     const r=new FileReader();
-    r.onload=()=>{ try{ S=JSON.parse(r.result); save(); mS.classList.add("hidden"); buildQueue(); next(); }
+    r.onload=()=>{ try{ S=JSON.parse(r.result); migrate(); save(); mS.classList.add("hidden"); buildQueue(); next(); }
       catch(err){ alert("Datei konnte nicht gelesen werden."); } };
     r.readAsText(f); };
   document.getElementById("btnReset").onclick=()=>{
@@ -516,6 +552,42 @@ function bindUI(){
   document.getElementById("btnList").onclick=()=>{ renderList(""); mL.classList.remove("hidden"); };
   document.getElementById("btnCloseList").onclick=()=>mL.classList.add("hidden");
   document.getElementById("listSearch").oninput=e=>renderList(e.target.value);
+  const mC=document.getElementById("modalCal");
+  document.getElementById("tileStreak").onclick=()=>{ openCal(); mC.classList.remove("hidden"); };
+  document.getElementById("btnCloseCal").onclick=()=>mC.classList.add("hidden");
+  document.getElementById("calPrev").onclick=()=>{ calM--; if(calM<0){calM=11;calY--;} renderCalendar(); };
+  document.getElementById("calNext").onclick=()=>{ calM++; if(calM>11){calM=0;calY++;} renderCalendar(); };
+}
+let calY, calM;
+function calKey(y,m,d){ return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"); }
+function longestStreak(){
+  const days=Object.keys(S.studyDays||{}).sort();
+  let best=0, cur=0, prev=null;
+  for(const d of days){ cur = (prev && addDays(prev,1)===d) ? cur+1 : 1; if(cur>best) best=cur; prev=d; }
+  return best;
+}
+function openCal(){
+  const p=today().split("-"); calY=+p[0]; calM=+p[1]-1;
+  document.getElementById("calStreak").textContent=S.streak||0;
+  document.getElementById("calTotal").textContent=Object.keys(S.studyDays||{}).length;
+  document.getElementById("calBest").textContent=longestStreak();
+  renderCalendar();
+}
+function renderCalendar(){
+  const months=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  document.getElementById("calTitle").textContent=months[calM]+" "+calY;
+  const firstDow=(new Date(calY,calM,1).getDay()+6)%7; // Montag=0
+  const daysInMonth=new Date(calY,calM+1,0).getDate();
+  const t=today();
+  let html=["Mo","Di","Mi","Do","Fr","Sa","So"].map(h=>`<div class="cald head">${h}</div>`).join("");
+  for(let i=0;i<firstDow;i++) html+=`<div class="cald empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const k=calKey(calY,calM,d); const cls=["cald"];
+    if(S.studyDays&&S.studyDays[k]) cls.push("learned");
+    if(k===t) cls.push("today");
+    html+=`<div class="${cls.join(" ")}">${d}</div>`;
+  }
+  document.getElementById("calGrid").innerHTML=html;
 }
 function renderList(q){
   q=q.toLowerCase();
