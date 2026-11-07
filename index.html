@@ -112,6 +112,13 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
 .searchbox{width:100%; padding:11px; border-radius:11px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font-size:1rem; margin-bottom:10px;}
 .memwarn{background:color-mix(in srgb, var(--warn) 18%, var(--card)); border:1px solid var(--warn);
   border-radius:12px; padding:10px 12px; font-size:.82rem; margin-bottom:12px; line-height:1.45;}
+.tips{margin:4px 0 12px; background:var(--chip); border:1px solid var(--line); border-radius:12px; padding:8px 12px;}
+.tips summary{cursor:pointer; font-weight:600; font-size:.95rem;}
+.tips ul{margin:8px 0 2px; padding-inline-start:20px;}
+.tips li{margin:6px 0; font-size:.9rem; line-height:1.4;}
+.exline{display:block; font-size:.82rem; color:var(--muted); margin-top:3px; direction:rtl; text-align:right;}
+.hardwhy{font-size:.8rem; color:var(--bad); font-weight:600;}
+.empty{padding:26px 10px; text-align:center; color:var(--muted); line-height:1.6;}
 </style>
 </head>
 <body>
@@ -140,6 +147,7 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
   <div class="setting"><label>Karteikarte (Selbsteinschätzung)</label><input type="checkbox" id="mFlash" checked></div>
   <div class="setting"><label>Multiple Choice</label><input type="checkbox" id="mMc" checked></div>
   <div class="setting"><label>Schreiben (Eingabe)</label><input type="checkbox" id="mType" checked></div>
+  <div class="btnrow"><button class="btn" id="btnHard">🎯 Schwierige Wörter üben</button></div>
   <div class="btnrow"><button class="btn sec" id="btnExport">Fortschritt exportieren</button>
     <button class="btn sec" id="btnImportClick">Importieren</button></div>
   <input type="file" id="fileImport" accept=".json" class="hidden">
@@ -168,6 +176,29 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
     <input class="searchbox" id="listSearch" placeholder="Suchen (Deutsch oder Hebräisch)…">
   </div>
   <div id="listBody"></div>
+</div></div>
+
+<div id="modalHard" class="modal hidden"><div class="sheet">
+  <div class="sheethead">
+    <div class="row"><h2>Schwierige Wörter (<span id="hardCount">0</span>)</h2>
+      <button class="closex" id="btnCloseHard" title="Schließen">✕</button></div>
+  </div>
+  <div id="hardActions" class="btnrow hidden">
+    <button class="btn" id="btnHardDrill">🎯 Intensiv üben</button>
+    <button class="btn sec" id="btnHardSheet">🖨 Abschreib-Blatt</button>
+  </div>
+  <details class="tips"><summary>💡 Tipps zum Verinnerlichen</summary>
+    <ul>
+      <li><b>Von Hand abschreiben</b> – jedes Wort 2–3× mit Nikud. Nutze das Abschreib-Blatt oben.</li>
+      <li><b>Laut sprechen</b> – tippe auf 🔊 und sprich das Wort und den Satz mit.</li>
+      <li><b>Eselsbrücke bauen</b> – ein Bild oder ein deutsch klingender Anker (z. B. מֻתָּשׁ „mutasch" → „muss duschen vor Erschöpfung").</li>
+      <li><b>Im eigenen Satz verwenden</b> – bau dir sofort einen neuen Beispielsatz mit dem Wort.</li>
+      <li><b>Wurzel (שורש) merken</b> – verknüpfe das Wort mit verwandten Wörtern derselben Wurzel.</li>
+      <li><b>Verwechslungen trennen</b> – bei ähnlichen Wörtern (z. B. רַעַב/רָעֵב) den Unterschied laut benennen.</li>
+      <li><b>Kurz & oft</b> – lieber 2 Minuten täglich gezielt als einmal lang.</li>
+    </ul>
+  </details>
+  <div id="hardBody"></div>
 </div></div>
 
 <script>
@@ -509,12 +540,19 @@ function renderDone(){
     ? `<div class="btnrow"><button class="btn sec" id="bMore">+${Math.min(5,remaining)} neue Wörter lernen</button></div>
        <div class="meta">Noch ${remaining} neue Wörter im Vorrat.</div>`
     : `<div class="meta">Du hast schon alle ${VOCAB.length} Wörter kennengelernt! 🏆<br>Neue kommen mit dem nächsten Kurs-Update.</div>`;
+  const hardN=hardList().length;
+  const hardBlock = hardN>0
+    ? `<div class="btnrow"><button class="btn sec" id="bHard">🎯 ${hardN} schwierige Wörter üben</button></div>`
+    : "";
   stage.innerHTML=`<div class="card done">
     <div class="big">🎉</div>
     <div class="de-big">Fertig für heute!</div>
     <div class="meta">${introToday} neue Wörter gelernt · Serie: ${S.streak} Tag(e) 🔥<br>Morgen warten ${tomorrow} Wiederholungen auf dich.</div>
     ${moreBlock}
+    ${hardBlock}
   </div>`;
+  const bh=document.getElementById("bHard");
+  if(bh) bh.onclick=openHard;
   const mb=document.getElementById("bMore");
   if(mb) mb.onclick=()=>{
     let added=0;
@@ -558,6 +596,11 @@ function bindUI(){
       S=defaultState(); save(); mS.classList.add("hidden"); buildQueue(); next(); } };
   document.getElementById("btnList").onclick=()=>{ renderList(""); mL.classList.remove("hidden"); };
   document.getElementById("btnCloseList").onclick=()=>mL.classList.add("hidden");
+  const mH=document.getElementById("modalHard");
+  document.getElementById("btnHard").onclick=()=>{ mS.classList.add("hidden"); openHard(); };
+  document.getElementById("btnCloseHard").onclick=()=>mH.classList.add("hidden");
+  document.getElementById("btnHardDrill").onclick=startHardDrill;
+  document.getElementById("btnHardSheet").onclick=printHardSheet;
   document.getElementById("listSearch").oninput=e=>renderList(e.target.value);
   const mC=document.getElementById("modalCal");
   document.getElementById("tileStreak").onclick=()=>{ openCal(); mC.classList.remove("hidden"); };
@@ -605,6 +648,83 @@ function renderList(q){
     const st=c&&c.intro ? `gelernt · nächste Wdh. ${c.due||"—"}` : "noch nicht gelernt";
     return `<div class="listrow"><span class="he">${w.he} ${spk('w'+w.id,true)}</span><span class="de">${esc(w.de)} · ${esc(w.pos)}${w.binyan?" ("+w.binyan+")":""} · ${w.level} · ${st}</span></div>`;
   }).join("");
+}
+
+/* ---------- Schwierige Wörter (Leeches) ---------- */
+function hardList(){
+  const arr=[];
+  for(const w of VOCAB){ const c=S.cards[w.id];
+    if(!c||!c.intro) continue;
+    const lapses=c.lapses||0, ef=(c.ef==null?2.5:c.ef);
+    if(lapses>=2 || ef<=1.9){
+      arr.push({w,lapses,ef,score:lapses*10+(2.5-ef)*6});
+    }
+  }
+  arr.sort((a,b)=>b.score-a.score);
+  return arr;
+}
+function openHard(){ renderHard(); document.getElementById("modalHard").classList.remove("hidden"); }
+function renderHard(){
+  const arr=hardList();
+  document.getElementById("hardCount").textContent=arr.length;
+  const body=document.getElementById("hardBody");
+  const act=document.getElementById("hardActions");
+  if(arr.length===0){
+    act.classList.add("hidden");
+    body.innerHTML=`<div class="empty">Aktuell keine Problemwörter – stark! 🎉<br>Wörter erscheinen hier automatisch, sobald du sie mehrmals falsch hast.</div>`;
+    return;
+  }
+  act.classList.remove("hidden");
+  body.innerHTML=arr.map(({w,lapses})=>{
+    const ex=(w.ex&&w.ex[0])?w.ex[0]:null;
+    return `<div class="listrow">
+      <span class="he">${w.he} ${spk('w'+w.id,true)}</span>
+      <span class="de">${esc(w.de)} · ${esc(w.pos)}${w.binyan?" ("+w.binyan+")":""} · <span class="hardwhy">${lapses}× falsch</span></span>
+      ${ex?`<span class="exline">${ex.he} — ${esc(ex.de)}</span>`:""}
+    </div>`;
+  }).join("");
+}
+function startHardDrill(){
+  const arr=hardList(); if(arr.length===0) return;
+  queue=shuffle(arr.map(x=>x.w.id)); qTotal=queue.length;
+  document.getElementById("modalHard").classList.add("hidden");
+  next();
+}
+function printHardSheet(){
+  const arr=hardList(); if(arr.length===0) return;
+  const rows=arr.map(({w},i)=>{
+    const ex=(w.ex&&w.ex[0])?w.ex[0]:null;
+    return `<tr><td class="num">${i+1}</td><td class="hw">${w.he}</td><td class="dw">${esc(w.de)}${ex?`<div class="ex">${ex.he}</div>`:""}</td><td class="write"></td></tr>`;
+  }).join("");
+  const sheet=`<!doctype html><html lang="de"><head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Abschreib-Blatt – Schwierige Wörter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+   body{font-family:-apple-system,system-ui,Arial,sans-serif;margin:24px;color:#111;}
+   h1{font-size:19px;margin:0 0 2px;} p.sub{color:#555;font-size:13px;margin:0 0 14px;}
+   table{width:100%;border-collapse:collapse;}
+   th,td{border-bottom:1px solid #bbb;padding:11px 6px;vertical-align:top;text-align:left;}
+   th{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.04em;}
+   td.num{width:26px;color:#999;}
+   td.hw{font-family:'Noto Sans Hebrew',serif;font-size:25px;direction:rtl;white-space:nowrap;width:28%;}
+   td.dw{font-size:14px;width:30%;} td.dw .ex{font-family:'Noto Sans Hebrew',serif;font-size:14px;color:#777;margin-top:4px;direction:rtl;}
+   td.write{width:36%;}
+   .btns{margin:0 0 16px;} button{font-size:15px;padding:9px 15px;margin-inline-end:8px;border:1px solid #888;border-radius:8px;background:#f3f3f3;cursor:pointer;}
+   @media print{.btns{display:none;} body{margin:6mm;} td{padding:14px 6px;}}
+  </style></head><body>
+   <div class="btns"><button onclick="window.print()">Drucken / Als PDF speichern</button></div>
+   <h1>Schwierige Wörter – Abschreib-Blatt</h1>
+   <p class="sub">${arr.length} Wörter · ${today()} · Tipp: schreibe jedes Wort 2–3× von Hand in die rechte Spalte – mit Nikud!</p>
+   <table><thead><tr><th class="num"></th><th>Hebräisch</th><th>Bedeutung</th><th>Von Hand</th></tr></thead><tbody>${rows}</tbody></table>
+  </body></html>`;
+  const win=window.open("","_blank");
+  if(win){ win.document.open(); win.document.write(sheet); win.document.close(); }
+  else{
+    const blob=new Blob([sheet],{type:"text/html"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="abschreib-blatt-"+today()+".html"; a.click();
+  }
 }
 
 /* ---------- Start ---------- */
