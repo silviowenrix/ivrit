@@ -189,7 +189,7 @@ input.answer:focus{outline:2px solid var(--accent); border-color:transparent}
   </div>
   <details class="tips"><summary>💡 Tipps zum Verinnerlichen</summary>
     <ul>
-      <li><b>Von Hand abschreiben</b> – jedes Wort 2–3× mit Nikud. Nutze das Abschreib-Blatt oben.</li>
+      <li><b>Von Hand abschreiben</b> – jedes Wort 2–3×, wie in Israel üblich ohne Nikud. Die Nikud in der App sind nur deine Aussprache-Hilfe. Nutze das Abschreib-Blatt oben.</li>
       <li><b>Laut sprechen</b> – tippe auf 🔊 und sprich das Wort und den Satz mit.</li>
       <li><b>Eselsbrücke bauen</b> – ein Bild oder ein deutsch klingender Anker (z. B. מֻתָּשׁ „mutasch" → „muss duschen vor Erschöpfung").</li>
       <li><b>Im eigenen Satz verwenden</b> – bau dir sofort einen neuen Beispielsatz mit dem Wort.</li>
@@ -715,7 +715,7 @@ function printHardSheet(){
   </style></head><body>
    <div class="btns"><button onclick="window.print()">Drucken / Als PDF speichern</button></div>
    <h1>Schwierige Wörter – Abschreib-Blatt</h1>
-   <p class="sub">${arr.length} Wörter · ${today()} · Tipp: schreibe jedes Wort 2–3× von Hand in die rechte Spalte – mit Nikud!</p>
+   <p class="sub">${arr.length} Wörter · ${today()} · Tipp: schreibe jedes Wort 2–3× von Hand in die rechte Spalte – wie in Israel üblich ohne Nikud. Die Nikud links sind nur die Aussprache-Hilfe.</p>
    <table><thead><tr><th class="num"></th><th>Hebräisch</th><th>Bedeutung</th><th>Von Hand</th></tr></thead><tbody>${rows}</tbody></table>
   </body></html>`;
   const win=window.open("","_blank");
